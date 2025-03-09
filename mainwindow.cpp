@@ -7,7 +7,7 @@
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
-    , ui(new Ui::MainWindow),dlg2(nullptr)
+    , ui(new Ui::MainWindow),dlg2(nullptr),dlg4(nullptr),dlg5(nullptr),dlg6(nullptr)
 {
     ui->setupUi(this);
     init();
@@ -1218,33 +1218,45 @@ void MainWindow::slotPlayBack() //回放
 void MainWindow::slotExport() //导出
 {
     //qDebug()<<"--------------------------导出数据槽函数-----------------------------------";
-    DlgExportData dlg(m_TreeItemInfo.path, this);
-    if (dlg.exec() == QDialog::Accepted)
+    if (dlg4)
     {
-        if (dlg.getLocalPath().isEmpty())
+        dlg4->show();
+        return; // 如果对话框已经存在，直接返回
+    }
+
+    // 创建对话框对象时使用new分配在堆上（防止局部变量被销毁）
+    dlg4 = new DlgExportData(m_TreeItemInfo.path, this);
+    // 设置关闭时自动删除（重要！防止内存泄漏）
+    dlg4->setAttribute(Qt::WA_DeleteOnClose);
+    // 连接对话框的关闭信号，确保在关闭时将指针置为nullptr
+    connect(dlg4, &DlgExportData::finished, this, [=]() {
+        dlg4 = nullptr; // 对话框关闭时将指针置为nullptr
+    });
+    // 使用show()代替exec()显示非模态对话框
+    dlg4->show();
+    // 连接对话框的完成信号（使用lambda捕获this指针）
+    connect(dlg4, &DlgExportData::accepted, this, [=]()
+    {
+        if(dlg4->getMode() == 1 ) //单文件正常导出
         {
-            QMessageBox::critical(this, tr("错误"), tr("请选择导出到本地的文件"));
-        }
-        else
-        {
-            int type = dlg.getExportType();        //获取是千兆还是万兆网
+            if (dlg4->getLocalPath().isEmpty())
+            {
+                QMessageBox::critical(this, tr("错误"), tr("请选择导出到本地的文件"));
+                return;
+            }
+            int type = dlg4->getExportType();        //获取是千兆还是万兆网
             exportFile(static_cast<NetworkPortType>(type));     //只是下发导出命令
-            bool b = dlg.getIfMvpp();
             if(NetworkPortType::GigabitEthernet == static_cast<NetworkPortType>(type))
             {
                 //qDebug()<<"使用千兆网来接收数据";
                 QString log = QString("%1: 正在使用千兆网导出数据中...").arg(getNowTime());
                 ui->textBrowser_log->append(log);
-                m_ExportFileInfo.localPath = dlg.getLocalPath();
+                m_ExportFileInfo.localPath = dlg4->getLocalPath();
                 m_ExportFileInfo.isReceivingFileInfo =true;
                 //qDebug()<<"导出数据时的标志位，应该为true = "<<m_ExportFileInfo.isReceivingFileInfo;
-
-                m_tcp->setExportModule(b);
-                m_tcp->setExportFileInfo(m_ExportFileInfo);
-                //如果是mvpp模式，先向这个文件中写入功率和hz
-                if(b)
+                if(m_tcp)
                 {
-                    emit sign_addTcpFileHead(dlg.getLocalPath(),dlg.m_power,dlg.m_hz);
+                    m_tcp->setExportFileInfo(m_ExportFileInfo);
                 }
             }
             else
@@ -1252,26 +1264,88 @@ void MainWindow::slotExport() //导出
                 //qDebug()<<"使用万兆网来接收数据";
                 QString log = QString("%1: 正在使用万兆网导出数据中...").arg(getNowTime());
                 ui->textBrowser_log->append(log);
-                m_udp->setUdpModule(b);
-                QString path = dlg.getLocalPath();
-                //m_udp->setPath(dlg.getLocalPath());
-                //m_udp->m_path = dlg.getLocalPath();
+                QString path = dlg4->getLocalPath();
                 emit sign_setUdpFilePath(path);
-                if(b)
-                {
-                    emit sign_addUdpFileHead(dlg.getLocalPath(),dlg.m_power,dlg.m_hz);
-                }
             }
         }
-    }
-    else
-    {
-        //点击取消
-    }
+        else if(dlg4->getMode() == 2) //单文件百分比导出
+        {
+            dlg4->close();
+            PercentExport();
+        }
+        else if(dlg4->getMode() == 3) //批量导出
+        {
+            dlg4->close();
+            ui->treeView->setSelectionMode(QAbstractItemView::ExtendedSelection);
+            MoreFileExport();
+        }
+        else {
+            qDebug() << "未知操作";
+        }
+    });
+
+    // 可选：处理对话框取消/关闭的情况
+    connect(dlg4, &DlgExportData::rejected, this, [](){
+        qDebug() << "对话框被取消或关闭";
+    });
 }
+//void MainWindow::slotExport() //导出
+//{
+//    //qDebug()<<"--------------------------导出数据槽函数-----------------------------------";
+//    DlgExportData dlg(m_TreeItemInfo.path, this);
+//    if (dlg.exec() == QDialog::Accepted)
+//    {
+//        if (dlg.getLocalPath().isEmpty())
+//        {
+//            QMessageBox::critical(this, tr("错误"), tr("请选择导出到本地的文件"));
+//        }
+//        else
+//        {
+//            int type = dlg.getExportType();        //获取是千兆还是万兆网
+//            exportFile(static_cast<NetworkPortType>(type));     //只是下发导出命令
+//            bool b = dlg.getIfMvpp();
+//            if(NetworkPortType::GigabitEthernet == static_cast<NetworkPortType>(type))
+//            {
+//                //qDebug()<<"使用千兆网来接收数据";
+//                QString log = QString("%1: 正在使用千兆网导出数据中...").arg(getNowTime());
+//                ui->textBrowser_log->append(log);
+//                m_ExportFileInfo.localPath = dlg.getLocalPath();
+//                m_ExportFileInfo.isReceivingFileInfo =true;
+//                //qDebug()<<"导出数据时的标志位，应该为true = "<<m_ExportFileInfo.isReceivingFileInfo;
+
+//                m_tcp->setExportModule(b);
+//                m_tcp->setExportFileInfo(m_ExportFileInfo);
+//                //如果是mvpp模式，先向这个文件中写入功率和hz
+//                if(b)
+//                {
+//                    emit sign_addTcpFileHead(dlg.getLocalPath(),dlg.m_power,dlg.m_hz);
+//                }
+//            }
+//            else
+//            {
+//                //qDebug()<<"使用万兆网来接收数据";
+//                QString log = QString("%1: 正在使用万兆网导出数据中...").arg(getNowTime());
+//                ui->textBrowser_log->append(log);
+//                m_udp->setUdpModule(b);
+//                QString path = dlg.getLocalPath();
+//                //m_udp->setPath(dlg.getLocalPath());
+//                //m_udp->m_path = dlg.getLocalPath();
+//                emit sign_setUdpFilePath(path);
+//                if(b)
+//                {
+//                    emit sign_addUdpFileHead(dlg.getLocalPath(),dlg.m_power,dlg.m_hz);
+//                }
+//            }
+//        }
+//    }
+//    else
+//    {
+//        //点击取消
+//    }
+//}
 
 //下发导出命令
-void MainWindow::exportFile(const NetworkPortType &type)
+void MainWindow::exportFile(const NetworkPortType &type,uint32_t percent,uint32_t cap)
 {
     //qDebug() << "开始下发导出指令";
     //下发内容,我只需要选择文件，读取就可以了，其他不用管
@@ -1300,6 +1374,8 @@ void MainWindow::exportFile(const NetworkPortType &type)
         cmd_export_file_func_info.export_type = 0x01;
     }
 
+    cmd_export_file_func_info.export_percent = percent;
+    cmd_export_file_func_info.export_cap = cap;
     cmd_export_file_func_info.check = 0;
     cmd_export_file_func_info.end = DSV_PACKET_TAIL;
     QByteArray sendData = QByteArray((char *) (&cmd_export_file_func_info), sizeof(Cmd_Export_File_Func_Info));
@@ -1310,6 +1386,232 @@ void MainWindow::exportFile(const NetworkPortType &type)
     lastOrderType = TYPE::EXPORT;
     emit sign_sendCmd(sendData);
 
+}
+
+void MainWindow::PercentExport()
+{
+    if (dlg5)
+    {
+        dlg5->show();
+        return; // 如果对话框已经存在，直接返回
+    }
+    ui->treeView->setSelectionMode(QAbstractItemView::SingleSelection);
+    // 创建对话框对象时使用new分配在堆上（防止局部变量被销毁）
+    dlg5 = new dlg_percent_export_data(m_TreeItemInfo.path, this);
+    // 设置关闭时自动删除（重要！防止内存泄漏）
+    dlg5->setAttribute(Qt::WA_DeleteOnClose);
+
+    // 连接对话框的关闭信号，确保在关闭时将指针置为nullptr
+    connect(dlg5, &dlg_percent_export_data::finished, this, [=]() {
+        dlg5 = nullptr; // 对话框关闭时将指针置为nullptr
+    });
+    // 使用show()代替exec()显示非模态对话框
+    dlg5->show();
+    qDebug() << "百分比导出操作开始";
+
+    // 连接对话框的完成信号（使用lambda捕获this指针）
+    connect(dlg5, &dlg_percent_export_data::accepted, this, [=]()
+    {
+        if (dlg5->getLocalPath().isEmpty())
+        {
+            QMessageBox::critical(this, tr("错误"), tr("请选择导出到本地的文件"));
+        }
+        else
+        {
+            auto type = dlg5->getExportType();  //获取是千兆还是万兆网
+            auto percent = dlg5->getExportPercent();
+            auto cap = dlg5->getExportCap();
+            exportFile(static_cast<NetworkPortType>(type),percent,cap);
+            if(NetworkPortType::GigabitEthernet == static_cast<NetworkPortType>(type))
+            {
+                //qDebug()<<"使用千兆网来接收数据";
+                QString log = QString("%1: 正在使用千兆网导出数据中...").arg(getNowTime());
+                ui->textBrowser_log->append(log);
+                m_ExportFileInfo.localPath = dlg5->getLocalPath();
+                m_ExportFileInfo.isReceivingFileInfo =true;
+                //qDebug()<<"导出数据时的标志位，应该为true = "<<m_ExportFileInfo.isReceivingFileInfo;
+                m_tcp->setExportFileInfo(m_ExportFileInfo);
+            }
+            else
+            {
+                //qDebug()<<"使用万兆网来接收数据";
+                QString log = QString("%1: 正在使用万兆网导出数据中...").arg(getNowTime());
+                ui->textBrowser_log->append(log);
+                QString path = dlg5->getLocalPath();
+                emit sign_setUdpFilePath(path);
+            }
+        }
+    });
+
+    // 可选：处理对话框取消/关闭的情况
+    connect(dlg5, &dlg_percent_export_data::rejected, this, [](){
+        qDebug() << "对话框被取消或关闭";
+    });
+}
+
+void MainWindow::MoreFileExport()
+{
+    int num=0;
+    if (dlg6)
+    {
+        dlg6->show();
+        return; // 如果对话框已经存在，直接返回
+    }
+    qDebug() << "对话框被取消或关闭";
+    // 创建对话框对象时使用new分配在堆上（防止局部变量被销毁）
+    dlg6 = new dlg_export_moreFile_data(m_TreeItemInfo.path, this);
+    // 设置关闭时自动删除（重要！防止内存泄漏）
+    dlg6->setAttribute(Qt::WA_DeleteOnClose);
+
+    // 连接对话框的关闭信号，确保在关闭时将指针置为nullptr
+    connect(dlg6, &dlg_export_moreFile_data::finished, this, [=]() {
+        dlg6 = nullptr; // 对话框关闭时将指针置为nullptr
+    });
+    // 使用show()代替exec()显示非模态对话框
+    dlg6->show();
+    qDebug() << "批量导出操作开始";
+
+    // 连接对话框的完成信号（使用lambda捕获this指针）
+    connect(dlg6, &dlg_export_moreFile_data::accepted, this, [=]()mutable
+    {
+        if (dlg6->getLocalPath().isEmpty())
+        {
+            QMessageBox::critical(this, tr("错误"), tr("请选择导出到本地的文件"));
+        }
+        else
+        {
+            auto type = dlg6->getExportType();  //获取是千兆还是万兆网
+            // 获取选中项
+            QItemSelectionModel *selectionModel = ui->treeView->selectionModel();
+            QModelIndexList selectedIndexes = selectionModel->selectedIndexes();
+            // 提取数据（假设为QStandardItemModel）
+            QStringList selectedTexts;
+            foreach (const QModelIndex &index, selectedIndexes)
+            {
+                if (index.column() == 0)
+                {
+                    QString path = buildPath(index);
+        //          qDebug() << "path：" << path;
+                    selectedTexts << path;
+                    num++;
+                }
+            }
+            // 使用selectedTexts进行后续操作
+            // qDebug() << "选中的项：" << selectedTexts;
+            qDebug() << "num：" << num;
+            exportMoreFile(static_cast<NetworkPortType>(type),&selectedTexts,num);
+            if(NetworkPortType::GigabitEthernet == static_cast<NetworkPortType>(type))
+            {
+                //qDebug()<<"使用千兆网来接收数据";
+                QString log = QString("%1: 正在使用千兆网导出数据中...").arg(getNowTime());
+                ui->textBrowser_log->append(log);
+                m_ExportFileInfo.localPath = dlg6->getLocalPath();
+                m_ExportFileInfo.isReceivingFileInfo =true;
+                //qDebug()<<"导出数据时的标志位，应该为true = "<<m_ExportFileInfo.isReceivingFileInfo;
+                m_tcp->setExportFileInfo(m_ExportFileInfo);
+            }
+            else
+            {
+                //qDebug()<<"使用万兆网来接收数据";
+                QString log = QString("%1: 正在使用万兆网导出数据中...").arg(getNowTime());
+                ui->textBrowser_log->append(log);
+                QString path = dlg6->getLocalPath();
+                emit sign_setUdpFilePath(path);
+            }
+        }
+    });
+
+    // 可选：处理对话框取消/关闭的情况
+    connect(dlg6, &dlg_export_moreFile_data::rejected, this, [](){
+        qDebug() << "对话框被取消或关闭";
+    });
+}
+
+void MainWindow::exportMoreFile(const NetworkPortType &type, QStringList *strlist, int Num)
+{
+    int j=0;
+    qDebug() << "开始下发导出指令";
+    //下发内容,我只需要选择文件，读取就可以了，其他不用管
+    Cmd_Export_More_File_Info cmd_export_Morefile_info={0};
+    cmd_export_Morefile_info.order_head = ORDERHEAD;
+    cmd_export_Morefile_info.head = DSV_PACKET_HEADER;
+    cmd_export_Morefile_info.source_ID = 0;
+    cmd_export_Morefile_info.dest_ID = 0;
+    cmd_export_Morefile_info.oper_type = 0xD2;
+    cmd_export_Morefile_info.oper_ID = 0x09;
+    cmd_export_Morefile_info.package_num = 0;
+    cmd_export_Morefile_info.export_num = Num;
+
+    if(NetworkPortType::GigabitEthernet == type)
+    {
+        cmd_export_Morefile_info.export_type = 0x00;
+    }
+    else
+    {
+        cmd_export_Morefile_info.export_type = 0x01;
+    }
+
+    cmd_export_Morefile_info.file_name=new File_Info[Num];
+    foreach (const QString& str, *strlist)
+    {
+        qDebug() <<"str:"<< str;
+        std::u16string utf16Str = str.toStdU16String();
+        size_t length = utf16Str.size();
+        for (size_t i = 0; i < 64; ++i)
+        {
+            if (i < length)
+                cmd_export_Morefile_info.file_name[j].name[i] = utf16Str[i];
+            else
+                cmd_export_Morefile_info.file_name[j].name[i] = 0;
+        }
+        j++;
+    }
+    cmd_export_Morefile_info.check = 0;
+    cmd_export_Morefile_info.end = DSV_PACKET_TAIL;
+
+    // 1. 计算需要发送的总大小
+    size_t totalSize = sizeof(uint32_t) * 11;  // 固定大小的成员
+    totalSize += sizeof(File_Info) * cmd_export_Morefile_info.export_num;  // 文件信息数组的大小
+    qDebug() << "totalSize:" << totalSize;
+    qDebug() << "export_num:" << cmd_export_Morefile_info.export_num;
+    // 2. 创建缓冲区
+    QByteArray buffer;
+    buffer.reserve(totalSize);
+    QDataStream stream(&buffer, QIODevice::WriteOnly);
+    stream.setByteOrder(QDataStream::LittleEndian);  // 设置字节序
+
+    // 3. 写入固定大小的成员
+    stream << cmd_export_Morefile_info.order_head
+          << cmd_export_Morefile_info.head
+          << cmd_export_Morefile_info.source_ID
+          << cmd_export_Morefile_info.dest_ID
+          << cmd_export_Morefile_info.oper_type
+          << cmd_export_Morefile_info.oper_ID
+          << cmd_export_Morefile_info.package_num
+          << cmd_export_Morefile_info.export_type
+          << cmd_export_Morefile_info.export_num;
+
+    // 4. 写入文件信息数组
+    for (uint32_t i = 0; i < cmd_export_Morefile_info.export_num; ++i) {
+        // 写入每个文件名
+        for (int j = 0; j < 64; ++j)
+        {
+            stream << quint16(cmd_export_Morefile_info.file_name[i].name[j]);
+        }
+    }
+
+    // 5. 写入校验码和包尾
+    stream << cmd_export_Morefile_info.check
+          << cmd_export_Morefile_info.end;
+
+
+    // 6. 发送数据
+    QString log = QString("%1:正在执行批量回放[%2]操作.").arg(getNowTime().arg(m_TreeItemInfo.name));
+    ui->textBrowser_log->append(log);
+    //记录操作类型
+    lastOrderType = TYPE::EXPORT;
+    emit sign_sendLenCmd(buffer,totalSize);
+    ui->treeView->setSelectionMode(QAbstractItemView::SingleSelection);
 }
 
 void MainWindow::slotAcquisition() //采集
@@ -1829,6 +2131,18 @@ void MainWindow::onTreeViewClicked(const QModelIndex &index)
     if(dlg2)
     {
         dlg2->setPath(m_TreeItemInfo.path);
+    }
+    if(dlg4)
+    {
+        dlg4->setPath(m_TreeItemInfo.path);
+    }
+    if(dlg5)
+    {
+        dlg5->setPath(m_TreeItemInfo.path);
+    }
+    if(dlg6)
+    {
+        dlg6->setPath(m_TreeItemInfo.path);
     }
 }
 

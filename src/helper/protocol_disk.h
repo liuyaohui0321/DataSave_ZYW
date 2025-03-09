@@ -392,13 +392,35 @@ typedef struct
 
     char16_t file_address[1024];    //文件路径
     uint32_t export_type;             //导出方式
-
+    uint32_t export_percent;          //导出百分比
+    uint32_t export_cap;             //导出容量
 
     uint32_t check;         //校验码
     uint32_t end ;          //包尾
 
 }Cmd_Export_File_Func_Info;
 
+//批量导出文件命令报文结构
+typedef struct
+{
+    uint32_t order_head;    //指令的头
+
+    //原协议内容
+    uint32_t head ;         //包头
+    uint32_t source_ID ;    //源组件ID，0
+    uint32_t dest_ID ;      //目的组件ID，0
+    uint32_t oper_type ;    //操作类型
+    uint32_t oper_ID ;      //操作ID
+    uint32_t package_num;   //包序列号，0
+
+    uint32_t export_type;    //导出方式
+    uint32_t export_num;     //批量导出文件数目
+    File_Info *file_name;    //N个单个文件的文件名称或绝对路径
+
+    uint32_t check;         //校验码
+    uint32_t end;          //包尾
+
+}Cmd_Export_More_File_Info;
 //读文件报文，老的协议内容
 //typedef struct
 //{

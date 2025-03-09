@@ -14,7 +14,7 @@
 #include "src/mymenu.h"
 #include "src/net/tcpthread.h"
 #include "src/dialog/diskconfirm.h"
-#include "src/dialog/dlgexportdata.h"
+//#include "src/dialog/dlgexportdata.h"
 #include "src/dialog/dlgfileorfolder.h"
 #include "src/dialog/dlgplaybackdata.h"
 #include "src/dialog/dlgwritedata.h"
@@ -23,6 +23,10 @@
 #include "src/net/udpthread.h"
 #include "src/dialog/udpwidget.h"
 #include "src/dialog/dlg_delete.h"
+
+#include "src/dialog/dlg_export_data.h"
+#include "src/dialog/dlg_percent_export_data.h"
+#include "src/dialog/dlg_export_morefile_data.h"
 
 
 QT_BEGIN_NAMESPACE
@@ -61,9 +65,12 @@ public:
     void copyFileOrFolder(const QString &newpath);    //复制的具体操作
     //void writeFile(const QString &localPath, const QString &dsvPath);   //点击开始写入
     //void stopWriteFile();  //点击停止写入
-    //void playBack(ReadMode mode,BackGTH gth,const int &count);    //回访
-    //void stopPlayBack();    //停止回放
-    void exportFile(const NetworkPortType &type);    //发送导出指令
+    void playBack(ReadMode mode,BackGTH gth,const int &count);    //回放
+    void stopPlayBack();    //停止回放
+    void exportFile(const NetworkPortType &type,uint32_t percent=100,uint32_t cap=0);
+    void PercentExport();           //百分比导出指令
+    void MoreFileExport();          //批量导出指令
+    void exportMoreFile(const NetworkPortType &type,QStringList *strlist,int Num);   //发送批量导出指令
     void acquisition(const QString &path);    //采集
     void stopAcquisition(const QString &path);    //停止采集
 
@@ -163,9 +170,9 @@ private:
 //    dlg_acquisition* dlg1;              // 添加指向采集对话框的指针   LYH 2.14
     dlg_delete* dlg2;                   // 添加指向删除对话框的指针   LYH 2.19
 //    dlg_multifile_play_back* dlg3;      // 添加指向多文件回放对话框的指针      LYH 2.19
-//    DlgExportData* dlg4;                // 添加指向导出数据对话框的指针        LYH 2.24
-//    dlg_percent_export_data *dlg5;      // 添加指向百分比导出数据对话框的指针   LYH 2.24
-//    dlg_export_moreFile_data *dlg6;     // 添加指向批量导出数据对话框的指针   LYH 2.24
+    DlgExportData* dlg4;                // 添加指向导出数据对话框的指针        LYH 2.24
+    dlg_percent_export_data *dlg5;      // 添加指向百分比导出数据对话框的指针   LYH 2.24
+    dlg_export_moreFile_data *dlg6;     // 添加指向批量导出数据对话框的指针   LYH 2.24
     QStandardItemModel *Model;
 
 };
