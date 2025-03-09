@@ -1,0 +1,26 @@
+<RCC>
+    <qresource prefix="/">
+        <file>Resources/images/add_filled_primary_blue.png</file>
+        <file>Resources/images/add_rectangle_primary_blue.png</file>
+        <file>Resources/images/app_primary_blue.png</file>
+        <file>Resources/images/chevron_left_double_primary_blue.png</file>
+        <file>Resources/images/chevron_right_double_primary_blue.png</file>
+        <file>Resources/images/close_rectangle_primary_blue.png</file>
+        <file>Resources/images/delete_fill_primary_blue.png</file>
+        <file>Resources/images/disk.png</file>
+        <file>Resources/images/edit_2_primary_blue.png</file>
+        <file>Resources/images/file.png</file>
+        <file>Resources/images/file_add_primary_blue.png</file>
+        <file>Resources/images/file_copy_primary_blue.png</file>
+        <file>Resources/images/file_word_primary_blue.png</file>
+        <file>Resources/images/folder.png</file>
+        <file>Resources/images/folder_add_primary_blue.png</file>
+        <file>Resources/images/folder_open_primary_blue.png</file>
+        <file>Resources/images/hide.png</file>
+        <file>Resources/images/move_primary_blue.png</file>
+        <file>Resources/images/note_transpond_primary_blue.png</file>
+        <file>Resources/images/refurbish_primary_blue.png</file>
+        <file>Resources/images/report_forms_primary_blue.png</file>
+        <file>Resources/images/show.png</file>
+    </qresource>
+</RCC>

@@ -1,0 +1,235 @@
+﻿
+/*设置右侧TabBar的样式*/
+QTabBar::tab {
+    background-color: white; /* 背景色为白色 */
+    color: gray; /* 非选中时的字体颜色 */
+    border-bottom: 0px solid rgba(222, 222, 222, 1); /* 非选中时无下边框 */
+    padding: 5px 10px; /* 调整内边距 */
+    height: 42px; /* 调整高度 */
+    font-weight: bold; /* 加粗 */
+    min-width: 160px;
+    font-size: 15px;
+}
+
+QTabBar::tab:selected {
+    background-color: white; /* 选中时的背景色 */
+    color: rgba(54, 159, 255, 1); /* 选中时的字体颜色 */
+    border-bottom: 2px solid rgba(54, 159, 255, 1); /* 选中时的下边框为蓝色 */
+}
+
+QTabWidget::pane {
+    border-top: 1px solid rgba(222, 222, 222, 1);  /* 设置上边框 */
+    border-left: none; /* 隐藏左边框 */
+    border-right: none; /* 隐藏右边框 */
+    border-bottom: none; /* 隐藏下边框 */
+    margin-top: 0px;
+    margin-bottom: 16px;
+    margin-left: 10px;
+    margin-right: 16px;
+}
+
+
+QComboBox::item:selected {
+    background-color: lightblue;
+}
+
+QComboBox::item:!enabled {
+    color: gray;
+}
+
+
+/*编辑框样式*/
+QLineEdit {
+    border: 1px solid rgba(220, 220, 220, 1); /* 灰色边框 */
+    border-radius: 4px; /* 圆角 */
+    height: 35px;
+}
+
+/*信息配置label*/
+QLabel{
+   color: black; /* 黑色文本 */
+   font-weight: bold; /* 加粗 */
+   font-size: 14px; /* 字号为 14 */
+}
+
+/*蓝色背景按钮*/
+QPushButton {
+    font: 12pt "微软雅黑";
+    color: #FFF;
+    background-color: #369FFF;
+    border: none;
+    border-radius: 3px;
+}
+QPushButton:disabled {
+    background-color: rgba(54, 159, 255, 0.3);
+}
+QPushButton:hover{
+    background:rgba(0, 0, 0, 0.2);
+}
+
+
+/*绿色背景按钮按钮*/
+QPushButton#greenBackgroundButton {
+    font: 12pt "微软雅黑";
+    color: #FFF;
+    background-color:rgba(54, 191, 125, 1);
+    border: none;
+    border-radius: 3px;
+}
+QPushButton#greenBackgroundButton:disabled {
+    background-color: rgba(54, 159, 255, 0.3);
+}
+QPushButton#greenBackgroundButton:hover{
+    background:rgba(0, 0, 0, 0.2);
+}
+
+
+/*绿色字体按钮按钮*/
+QPushButton#greenFontButton {
+    font: 12pt "微软雅黑";
+    border: 1px solid rgba(54,191,125,1); /* 绿色边框 */
+    color: rgba(54,191,125,1); /* 绿色字体 */
+    background-color: transparent; /* 背景透明 */
+    border-radius: 3px;
+}
+QPushButton#greenFontButton:disabled {
+    background-color: rgba(54, 159, 255, 0.3);
+}
+QPushButton#greenFontButton:hover{
+    background:rgba(0, 0, 0, 0.2);
+}
+
+/*蓝色字体按钮按钮*/
+QPushButton#blueFontButton {
+    font: 12pt "微软雅黑";
+    border: 1px solid rgba(54, 159, 255,1); /* 蓝色色边框 */
+    color: rgba(54, 159, 255,1); /* 蓝色字体 */
+    background-color: transparent; /* 背景透明 */
+    border-radius: 3px;
+}
+QPushButton#blueFontButton:disabled {
+    background-color: rgba(54, 159, 255, 0.3);
+}
+QPushButton#blueFontButton:hover{
+    background:rgba(0, 0, 0, 0.2);
+}
+
+/*黑色14号加租字体标签*/
+ QLabel#black14BoldFontLabel{
+   color:  rgba(0, 0, 0, 0.9); /* 黑色文本 */
+   font-weight: bold; /* 加粗 */
+   font-size: 14px; /* 字号为 14 */
+ }
+
+ /*黑色16号加租字体标签*/
+  QLabel#black16BoldFontLabel{
+    color:  rgba(0, 0, 0, 0.9); /* 黑色文本 */
+    font-weight: bold; /* 加粗 */
+    font-size: 16px; /* 字号为 16 */
+  }
+ 
+ /*黑色14号字体标签*/
+ QLabel#black14FontLabel{
+    color: black; /* 黑色文本 */
+   font-size: 14px; /* 字号为 14 */
+ }
+
+
+QTreeWidget {
+    font-family: "Microsoft YaHei";
+    font-size: 14px;
+    font-weight: normal;
+    text-align: left;
+
+}
+
+QTreeWidget:focus
+{
+    outline: 0px;
+}
+
+QTreeWidget::item {
+    font-family: "Microsoft YaHei";
+    font-size: 14px;
+    font-weight: normal;
+    text-align: left;
+    border: 0; /* 去除虚线外边框 */
+    outline: none;
+}
+
+QTreeWidget::item:selected {
+    background-color: #EEF7FF;
+    color: #369FFF;
+    outline: none;
+}
+
+QTreeWidget::item:hover {
+    background-color: #EEF7FF;
+    color: #369FFF;
+}
+
+
+QTableWidget {
+    selection-background-color: #EEF7FF; /* 选中项的背景颜色 */
+}
+
+QTableWidget:focus
+{
+    outline: 0px;
+}
+
+QTableWidget QHeaderView::section {
+    background-color: white; /* 表头的背景颜色 */
+    color: black;
+    font-weight: bold; /* 表头字体的粗细 */
+    padding: 4px; /* 表头的内边距 */
+}
+
+QTableWidget::item {
+    padding: 0px; /* 表格项的内边距 */
+    height: 35px; /* 设置项的高度为40像素 */
+}
+
+QTableWidget::item:selected {
+    color: black; /* 选中项的文本颜色 */
+    outline: none;
+}
+
+QTableWidget::item:!selected:hover {
+    background-color: lightblue; /* 非选中项悬停时的背景颜色 */
+}
+
+QTableWidget::item:selected:!active {
+    background-color: #EEF7FF; /* 选中项但不是当前活动项的背景颜色 */
+}
+
+QTableWidget::item:selected:active {
+    background-color: #A9D0F5; /* 选中项且是当前活动项的背景颜色 */
+}
+
+QTableWidget::item:disabled {
+    color: gray; /* 禁用项的文本颜色 */
+}
+
+QTableWidget::item:focus {
+    background-color: #E0FFFF; /* 选中项获得焦点时的背景颜色 */
+}
+
+
+
+QComboBox#tableComboBox {
+    combobox-popup: 0;
+    background-color: transparent; /* 设置背景透明 */
+    padding: 1px; /* 设置内边距 */
+}
+
+QComboBox#tableComboBox::drop-down {
+    width: 20px; /* 设置下拉箭头的宽度 */
+}
+
+QComboBox#tableComboBox::item {
+    padding: 4px; /* 设置下拉项的内边距 */
+    height: 30px; /* 设置下拉项的高度 */
+}
+
+
