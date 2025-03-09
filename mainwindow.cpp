@@ -7,7 +7,7 @@
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
-    , ui(new Ui::MainWindow),dlg2(nullptr),dlg4(nullptr),dlg5(nullptr),dlg6(nullptr)
+    , ui(new Ui::MainWindow),dlg1(nullptr),dlg2(nullptr),dlg4(nullptr),dlg5(nullptr),dlg6(nullptr)
 {
     ui->setupUi(this);
     init();
@@ -1614,9 +1614,116 @@ void MainWindow::exportMoreFile(const NetworkPortType &type, QStringList *strlis
     ui->treeView->setSelectionMode(QAbstractItemView::SingleSelection);
 }
 
+void MainWindow::acquisition(const QString &path)
+{
+    //下发内容,我只需要选择文件，读取就可以了，其他不用管
+    Cmd_File_Acquisition_Info cmd_file_acquisition_info;
+    cmd_file_acquisition_info.order_head = ORDERHEAD;//0xBCBCAAAA
+    cmd_file_acquisition_info.package_head = DSV_PACKET_HEADER;//0x55555555
+    cmd_file_acquisition_info.source_ID = 0;
+    cmd_file_acquisition_info.dest_ID = 0;
+    cmd_file_acquisition_info.oper_type = 0xD2;
+    cmd_file_acquisition_info.oper_ID = 0x03;
+    cmd_file_acquisition_info.package_num = 0;
+    std::u16string utf16Str_para1 = path.toStdU16String();
+    size_t length1 = utf16Str_para1.size();
+    for (size_t i = 0; i < 1024; ++i)
+    {
+        if(i<length1)
+            cmd_file_acquisition_info.file_address[i] = utf16Str_para1[i];
+        else
+            cmd_file_acquisition_info.file_address[i]=0;
+    }
+
+    cmd_file_acquisition_info.check_code = 0;
+    cmd_file_acquisition_info.package_tail = DSV_PACKET_TAIL;//0xAAAAAAAA
+    QByteArray sendData = QByteArray((char *) (&cmd_file_acquisition_info), sizeof(Cmd_File_Acquisition_Info));
+
+    QString log = QString("%1:正在执行采集[%2]操作.").arg(getNowTime().arg(m_TreeItemInfo.name));
+    ui->textBrowser_log->append(log);
+
+    //记录操作类型
+    lastOrderType = TYPE::Acquisition;
+    emit sign_sendCmd(sendData);
+}
+
+void MainWindow::stopAcquisition(const QString &path)
+{
+    //下发内容,我只需要选择文件，读取就可以了，其他不用管
+    Cmd_File_Acquisition_Info cmd_file_acquisition_info;
+    cmd_file_acquisition_info.order_head = ORDERHEAD;//0xBCBCAAAA
+    cmd_file_acquisition_info.package_head = DSV_PACKET_HEADER;//0x55555555
+    cmd_file_acquisition_info.source_ID = 0;
+    cmd_file_acquisition_info.dest_ID = 0;
+    cmd_file_acquisition_info.oper_type = 0xD2;
+    cmd_file_acquisition_info.oper_ID = 0x05;
+    cmd_file_acquisition_info.package_num = 0;
+    std::u16string utf16Str_para1 = path.toStdU16String();
+    size_t length1 = utf16Str_para1.size();
+    for (size_t i = 0; i < 1024; ++i)
+    {
+        if(i<length1)
+            cmd_file_acquisition_info.file_address[i] = utf16Str_para1[i];
+        else
+            cmd_file_acquisition_info.file_address[i]=0;
+    }
+
+    cmd_file_acquisition_info.check_code = 0;
+    cmd_file_acquisition_info.package_tail = DSV_PACKET_TAIL;//0xAAAAAAAA
+
+    QByteArray sendData = QByteArray((char *) (&cmd_file_acquisition_info), sizeof(Cmd_File_Acquisition_Info));
+
+    QString log = QString("%1:正在执行停止采集[%2]操作.").arg(getNowTime().arg(m_TreeItemInfo.name));
+    ui->textBrowser_log->append(log);
+
+    //记录操作类型
+    lastOrderType = TYPE::STOPAcquisition;
+    emit sign_sendCmd(sendData);
+}
+
 void MainWindow::slotAcquisition() //采集
 {
     //qDebug()<<"采集操作";
+    if (dlg1)
+    {
+        dlg1->show();
+        return; // 如果对话框已经存在，直接返回
+    }
+    // 创建对话框对象时使用new分配在堆上（防止局部变量被销毁）
+     dlg1 = new dlg_acquisition(m_TreeItemInfo.path, this);
+    // 设置关闭时自动删除（重要！防止内存泄漏）
+    dlg1->setAttribute(Qt::WA_DeleteOnClose);
+//    connect(ui->treeView, &QTreeView::clicked, this, &MainWindow::onTreeViewClicked);
+
+    // 连接对话框的关闭信号，确保在关闭时将指针置为nullptr
+    connect(dlg1, &dlg_acquisition::finished, this, [=]() {
+        dlg1 = nullptr; // 对话框关闭时将指针置为nullptr
+    });
+    // 使用show()代替exec()显示非模态对话框
+    dlg1->show();
+    // 连接对话框的完成信号（使用lambda捕获this指针）
+    connect(dlg1, &dlg_acquisition::accepted, this, [=](){
+        auto strPath = dlg1->getLocalPath();
+        if(dlg1->getMode() == 1) {
+            qDebug() << "发送开始采集";
+            acquisition(strPath);
+//            isWaitingResponse = true;
+            //  之后需要接收下位机发送过来的执行指令，如果准备好了再发，否则发执行错误
+        }
+        else if (dlg1->getMode() == 2) {
+            qDebug() << "发送停止采集指令" ;
+            stopAcquisition(strPath);
+//            isWaitingResponse = true;
+        }
+        else {
+            qDebug() << "未知操作";
+        }
+    });
+
+    // 可选：处理对话框取消/关闭的情况
+    connect(dlg1, &dlg_acquisition::rejected, this, [](){
+        qDebug() << "对话框被取消或关闭";
+    });
 }
 
 void MainWindow::showMenu()
@@ -2128,6 +2235,10 @@ void MainWindow::onTreeViewClicked(const QModelIndex &index)
 {
     if(!index.isValid()) return; //确认索引有效
 
+    if(dlg1)
+    {
+        dlg1->setPath(m_TreeItemInfo.path);
+    }
     if(dlg2)
     {
         dlg2->setPath(m_TreeItemInfo.path);

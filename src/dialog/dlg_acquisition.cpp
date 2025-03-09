@@ -23,6 +23,11 @@ QString dlg_acquisition::getLocalPath()
     return ui->m_leName->text();
 }
 
+void dlg_acquisition::setPath(const QString &path)
+{
+    ui->m_leName->setText(path);// 设置路径到输入框  LYH 2.14
+}
+
 void dlg_acquisition::slotBtnAcquisitionClicked()
 {
     m_pLocalPath =   ui->m_leName->text();
@@ -33,7 +38,9 @@ void dlg_acquisition::slotBtnAcquisitionClicked()
     }
     else{
         m_mode = 1;
-        dlg_acquisition::accept();
+//        dlg_acquisition::accept();
+        emit accepted(); //LYH 2.14
+        close();
     }
 }
 
@@ -47,6 +54,8 @@ void dlg_acquisition::slotBtnStopAcquisitionClicked()
     }
     else{
         m_mode = 2;
-        dlg_acquisition::accept();
+//        dlg_acquisition::accept();
+        emit accepted();
+        close();
     }
 }

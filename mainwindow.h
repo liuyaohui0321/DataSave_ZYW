@@ -161,13 +161,13 @@ private:
 
 
     enum TYPE{
-        UNUSE,REFRESH,ADDFOLDER,ADDFILE,DELETE,RENAME,MOVE,COPY,EXPORT,DISK_FORMAT,DISK_AGAINMOUNT,DISK_UNMOUNT
+        UNUSE,REFRESH,ADDFOLDER,ADDFILE,DELETE,RENAME,MOVE,COPY,EXPORT,DISK_FORMAT,DISK_AGAINMOUNT,DISK_UNMOUNT,STOPAcquisition,Acquisition,PLAYBACK,stopPLAYBACK
     };
     int lastOrderType = 0;
 
 private:
 //    DlgPlayBackData* dlg;               // 添加指向回放对话框的指针   LYH 2.14
-//    dlg_acquisition* dlg1;              // 添加指向采集对话框的指针   LYH 2.14
+    dlg_acquisition* dlg1;              // 添加指向采集对话框的指针   LYH 2.14
     dlg_delete* dlg2;                   // 添加指向删除对话框的指针   LYH 2.19
 //    dlg_multifile_play_back* dlg3;      // 添加指向多文件回放对话框的指针      LYH 2.19
     DlgExportData* dlg4;                // 添加指向导出数据对话框的指针        LYH 2.24

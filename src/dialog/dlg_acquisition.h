@@ -2,6 +2,8 @@
 #define DLG_ACQUISITION_H
 
 #include <QDialog>
+#include "dsv_define.h"
+#include <QDebug>
 
 namespace Ui {
 class dlg_acquisition;
@@ -22,10 +24,15 @@ public:
     {
         return m_mode;
     }
+    void setPath(const QString& path); // LYH 2.14
 
 private slots:
     void slotBtnAcquisitionClicked();
     void slotBtnStopAcquisitionClicked();
+
+signals:
+    void accepted();
+    void rejected();
 
 private:
     Ui::dlg_acquisition *ui;
