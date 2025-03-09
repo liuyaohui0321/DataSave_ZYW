@@ -29,6 +29,29 @@ typedef struct
 
 } Cmd_Folder_And_File_Info;
 
+typedef struct
+{
+    char16_t name[64];
+} File_Info;
+
+/*文件批量删除报文结构*/
+typedef struct
+{
+    uint32_t order_head;    //指令的头
+
+    //原协议内容
+    uint32_t head ;         //包头
+    uint32_t source_ID ;    //源组件ID，0
+    uint32_t dest_ID ;      //目的组件ID，0
+    uint32_t oper_type ;    //操作类型
+    uint32_t oper_ID ;      //操作ID
+    uint32_t package_num;   //包序列号，0
+    uint32_t file_num ;     //删除的文件数量
+    File_Info *file_name;     //N个单个文件的文件名称或绝对路径
+    uint32_t check;         //校验码
+    uint32_t end ;          //包尾
+
+} Cmd_File_Info;
 
 /*5.2.2	文件、文件夹及磁盘管理操作结果通用问询报文结构*/
 typedef struct

@@ -7,7 +7,7 @@
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
-    , ui(new Ui::MainWindow)
+    , ui(new Ui::MainWindow),dlg2(nullptr)
 {
     ui->setupUi(this);
     init();
@@ -222,6 +222,7 @@ void MainWindow::init()
     connect(ui->treeView, &QTreeView::customContextMenuRequested, this, &MainWindow::slot_CustomContextMenuRequested);
     //connect(ui->treeView, &QTreeView::customContextMenuRequested, this, &MainWindow::showMenu);
     connect(ui->treeView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &MainWindow::slot_onItemSelected);
+    connect(ui->treeView, &QTreeView::clicked, this, &MainWindow::onTreeViewClicked);//LYH 2.14
 
     m_tcp = new TCPThread();
     m_tcpWorkThread = new QThread(this);
@@ -234,6 +235,7 @@ void MainWindow::init()
     });
     connect(m_tcp,&TCPThread::sign_getNewConnect,this,&MainWindow::slot_haveNewConnection);
     connect(this,&MainWindow::sign_sendCmd,m_tcp,&TCPThread::slot_getCmd);
+    connect(this,&MainWindow::sign_sendLenCmd,m_tcp,&TCPThread::slot_getLenCmd);
     connect(m_tcp,&TCPThread::sign_tcpNotConnect,this,[=](){
         QString log = QString("%1: 传输连接并未建立，请等待连接建立完成后，再进行操作！！！").arg(getNowTime());
         ui->textBrowser_log->append(log);
@@ -470,16 +472,217 @@ void MainWindow::slotOpen()    //打开
 }
 
 //选中一个文件或者文件夹进行删除
+//void MainWindow::slotDelete()  //之前的写法
+//{
+//    auto ret = QMessageBox::information(this, "确认是否删除", "是否确定删除，删除后不可恢复",
+//                                        QMessageBox::Yes | QMessageBox::No, QMessageBox::Yes);
+//    if (ret == QMessageBox::No) {
+//        return;
+//    }
+
+//    //qDebug() << "删除操作.";
+
+//    if (m_TreeItemInfo.type == Folder)    //删除文件夹
+//    {
+//        //下发的内容
+//        Cmd_Folder_And_File_Info cmd_folder_and_file_info;
+//        cmd_folder_and_file_info.order_head = ORDERHEAD;
+//        cmd_folder_and_file_info.head = DSV_PACKET_HEADER;
+//        cmd_folder_and_file_info.source_ID = 0;
+//        cmd_folder_and_file_info.dest_ID = 0;
+//        cmd_folder_and_file_info.oper_type = 0xA2;
+//        cmd_folder_and_file_info.oper_ID = 0x01;
+//        cmd_folder_and_file_info.package_num = 0;
+//        cmd_folder_and_file_info.fun_type = 0x04;   //删除文件夹 4
+//        cmd_folder_and_file_info.fun_para1[1024] = {0};
+//        QString temp_para1 = m_TreeItemInfo.path;
+//        std::u16string utf16Str_para1 = temp_para1.toStdU16String();
+//        size_t length = utf16Str_para1.size();
+//        for (size_t i = 0; i < 1024; ++i) {
+//            if (i < length)
+//                cmd_folder_and_file_info.fun_para1[i] = utf16Str_para1[i];
+//            else
+//                cmd_folder_and_file_info.fun_para1[i] = 0;
+//        }
+//        cmd_folder_and_file_info.fun_para2[1024] = {0};
+//        cmd_folder_and_file_info.check = 0;
+//        cmd_folder_and_file_info.end = DSV_PACKET_TAIL;
+//        QByteArray sendData = QByteArray((char *) (&cmd_folder_and_file_info), sizeof(Cmd_Folder_And_File_Info));
+
+//        QString log = QString("%1:正在执行删除文件夹[%2]操作.").arg(getNowTime().arg(m_TreeItemInfo.name));
+//        ui->textBrowser_log->append(log);
+//        //记录操作类型
+//        lastOrderType = TYPE::DELETE;
+//        emit sign_sendCmd(sendData);
+//    }
+//    else if (m_TreeItemInfo.type == File)      //删除文件
+//    {
+//        //下发的内容
+//        Cmd_Folder_And_File_Info cmd_folder_and_file_info;
+//        cmd_folder_and_file_info.order_head = ORDERHEAD;
+//        cmd_folder_and_file_info.head = DSV_PACKET_HEADER;
+//        cmd_folder_and_file_info.source_ID = 0;
+//        cmd_folder_and_file_info.dest_ID = 0;
+//        cmd_folder_and_file_info.oper_type = 0xA2;
+//        cmd_folder_and_file_info.oper_ID = 0x01;
+//        cmd_folder_and_file_info.package_num = 0;
+//        cmd_folder_and_file_info.fun_type = 0x03;   //删除文件 3
+//        cmd_folder_and_file_info.fun_para1[1024] = {0};
+//        QString temp_para1 = m_TreeItemInfo.path;
+//        std::u16string utf16Str_para1 = temp_para1.toStdU16String();
+//        size_t length = utf16Str_para1.size();
+//        for (size_t i = 0; i < 1024; ++i) {
+//            if (i < length)
+//                cmd_folder_and_file_info.fun_para1[i] = utf16Str_para1[i];
+//            else
+//                cmd_folder_and_file_info.fun_para1[i] = 0;
+//        }
+//        cmd_folder_and_file_info.fun_para2[1024] = {0};
+//        cmd_folder_and_file_info.check = 0;
+//        cmd_folder_and_file_info.end = DSV_PACKET_TAIL;
+//        QByteArray sendData = QByteArray((char *) (&cmd_folder_and_file_info), sizeof(Cmd_Folder_And_File_Info));
+
+//        QString log = QString("%1:正在执行删除文件[%2]操作.").arg(getNowTime().arg(m_TreeItemInfo.name));
+//        ui->textBrowser_log->append(log);
+//        //记录操作类型
+//        lastOrderType = TYPE::DELETE;
+//        emit sign_sendCmd(sendData);
+//    } else {
+//        //qDebug() << "文件类型错误！";
+//    }
+
+//}
 void MainWindow::slotDelete()
 {
-    auto ret = QMessageBox::information(this, "确认是否删除", "是否确定删除，删除后不可恢复",
-                                        QMessageBox::Yes | QMessageBox::No, QMessageBox::Yes);
-    if (ret == QMessageBox::No) {
-        return;
-    }
+        int num=0;
+        // 创建并显示一个消息框
+        QMessageBox messageBox;
+        messageBox.setWindowTitle("确认删除");
+        messageBox.setInformativeText("是否确定删除，删除后不可恢复");
+        // 添加三个按钮：确认、取消和批量删除
+        messageBox.addButton("确认", QMessageBox::AcceptRole);
+        messageBox.addButton("取消", QMessageBox::RejectRole);
+    //    messageBox.addButton("批量删除", QMessageBox::NoRole);
+        QPushButton* batchDeleteButton = messageBox.addButton("批量删除", QMessageBox::NoRole);
 
-    //qDebug() << "删除操作.";
+        // 显示消息框，并获取用户的选择
+        int ret = messageBox.exec();
+        // 根据用户的选择执行相应的操作
+        if (ret == QMessageBox::AcceptRole)
+        {
+            qDebug() << "用户选择了确认删除";
+            // 在这里添加确认删除的代码
+            if (dlg2)
+            {
+                dlg2->show();
+                return; // 如果对话框已经存在，直接返回
+            }
+            // 创建对话框对象时使用new分配在堆上（防止局部变量被销毁）
+             dlg2 = new dlg_delete(m_TreeItemInfo.path, this);
+            // 设置关闭时自动删除（重要！防止内存泄漏）
+             dlg2->setAttribute(Qt::WA_DeleteOnClose);
+    //         connect(ui->treeView, &QTreeView::clicked, this, &MainWindow::onTreeViewClicked);//不屏蔽的话，dlg_delete::accepted会触发两次
 
+            // 连接对话框的关闭信号，确保在关闭时将指针置为nullptr
+             connect(dlg2, &dlg_delete::finished, this, [=]() {
+                dlg2 = nullptr; // 对话框关闭时将指针置为nullptr
+            });
+             // 使用show()代替exec()显示非模态对话框
+            dlg2->show();
+            connect(dlg2, &dlg_delete::accepted, this, [=]()
+            {
+                qDebug() << "单个删除操作";
+                DeleteOne();  //单个删除
+        //      isWaitingResponse = true;
+        //      之后需要接收下位机发送过来的执行指令，如果准备好了再发，否则发执行错误
+            });
+        }
+        else if (ret == QMessageBox::RejectRole)
+        {
+            qDebug() << "用户选择了取消";
+            // 在这里添加取消删除的代码
+        }
+        else if (batchDeleteButton == messageBox.clickedButton())
+        {
+            qDebug() << "用户选择了批量删除";
+            // 在这里添加批量删除的代码
+    //        ui->treeView->setSelectionMode(QAbstractItemView::MultiSelection);
+            ui->treeView->setSelectionMode(QAbstractItemView::ExtendedSelection);
+            if (dlg2)
+            {
+                dlg2->show();
+                return; // 如果对话框已经存在，直接返回
+            }
+            // 创建对话框对象时使用new分配在堆上（防止局部变量被销毁）
+             dlg2 = new dlg_delete(m_TreeItemInfo.path, this);
+            // 设置关闭时自动删除（重要！防止内存泄漏）
+             dlg2->setAttribute(Qt::WA_DeleteOnClose);
+    //         connect(ui->treeView, &QTreeView::clicked, this, &MainWindow::onTreeViewClicked);
+             dlg2->LineEditSet();
+             dlg2->Dialog_Set("选中文件");
+             dlg2->resize(360,250);
+            // 连接对话框的关闭信号，确保在关闭时将指针置为nullptr
+             connect(dlg2, &dlg_delete::finished, this, [=]() {
+                dlg2 = nullptr; // 对话框关闭时将指针置为nullptr
+                ui->treeView->setSelectionMode(QAbstractItemView::SingleSelection);
+            });
+             // 使用show()代替exec()显示非模态对话框
+            dlg2->show();
+            // 连接对话框的完成信号（使用lambda捕获this指针）
+            connect(dlg2, &dlg_delete::accepted, this, [=]()mutable
+    //        connect(dlg2, &dlg_delete::accepted, this, [=]()
+            {
+                qDebug() << "批量删除操作";
+    #if   0 //相对地址
+                // 获取选中项
+                QItemSelectionModel *selection = ui->treeView->selectionModel();
+                QModelIndexList indexes = selection->selectedIndexes();
+                // 提取数据（假设为QStandardItemModel）
+                QStringList selectedTexts;
+                foreach (const QModelIndex &index, indexes) {
+                    if (index.column() == 0) {
+                        QStandardItem *item = Model->itemFromIndex(index);
+                        if (item) {
+                            selectedTexts << item->text();
+                            qDebug() <<item->text();
+                        }
+                    }
+                }
+                // 使用selectedTexts进行后续操作
+                qDebug() << "选中的项：" << selectedTexts;
+    #else //绝对地址
+                // 获取选中项
+                QItemSelectionModel *selectionModel = ui->treeView->selectionModel();
+                QModelIndexList selectedIndexes = selectionModel->selectedIndexes();
+                // 提取数据（假设为QStandardItemModel）
+                QStringList selectedTexts;
+                foreach (const QModelIndex &index, selectedIndexes)
+                {
+                    if (index.column() == 0)
+                    {
+                        QString path = buildPath(index);
+    //                    qDebug() << "path：" << path;
+                        selectedTexts << path;
+                        num++;
+                    }
+                }
+                // 使用selectedTexts进行后续操作
+    //            qDebug() << "选中的项：" << selectedTexts;
+    //            qDebug() << "num：" << num;
+    #endif
+                DeleteMore(num,selectedTexts);
+                ui->treeView->setSelectionMode(QAbstractItemView::SingleSelection);
+            });
+        } else {
+            qDebug() << "用户关闭了对话框";
+        }
+
+}
+
+void MainWindow::DeleteOne()
+{
+//    stateShow->setText("删除中...");
+//    stateShow->setStyleSheet("color: green;");
     if (m_TreeItemInfo.type == Folder)    //删除文件夹
     {
         //下发的内容
@@ -505,6 +708,7 @@ void MainWindow::slotDelete()
         cmd_folder_and_file_info.fun_para2[1024] = {0};
         cmd_folder_and_file_info.check = 0;
         cmd_folder_and_file_info.end = DSV_PACKET_TAIL;
+
         QByteArray sendData = QByteArray((char *) (&cmd_folder_and_file_info), sizeof(Cmd_Folder_And_File_Info));
 
         QString log = QString("%1:正在执行删除文件夹[%2]操作.").arg(getNowTime().arg(m_TreeItemInfo.name));
@@ -545,11 +749,124 @@ void MainWindow::slotDelete()
         //记录操作类型
         lastOrderType = TYPE::DELETE;
         emit sign_sendCmd(sendData);
-    } else {
-        //qDebug() << "文件类型错误！";
     }
-
+    else
+    {
+        qDebug() << "文件类型错误！";
+    }
 }
+
+void MainWindow::DeleteMore(int &num,QStringList &data)
+{
+//    stateShow->setText("删除中...");
+//    stateShow->setStyleSheet("color: green;");
+        int j=0;
+        //下发的内容
+        Cmd_File_Info cmd_file_info;
+        cmd_file_info.order_head = ORDERHEAD;
+        cmd_file_info.head = DSV_PACKET_HEADER;
+        cmd_file_info.source_ID = 0;
+        cmd_file_info.dest_ID = 0;
+        cmd_file_info.oper_type = 0xA2;
+        cmd_file_info.oper_ID = 0x09;
+        cmd_file_info.package_num = 0;
+        cmd_file_info.file_num=num;
+        cmd_file_info.file_name = new File_Info[num];
+        foreach (const QString& str, data)
+        {
+            qDebug() <<"str:"<< str;
+            std::u16string utf16Str = str.toStdU16String();
+            size_t length = utf16Str.size();
+            for (size_t i = 0; i < 64; ++i)
+            {
+                if (i < length)
+                    cmd_file_info.file_name[j].name[i] = utf16Str[i];
+                else
+                    cmd_file_info.file_name[j].name[i] = 0;
+            }
+            j++;
+        }
+        cmd_file_info.check = 0;
+        cmd_file_info.end = DSV_PACKET_TAIL;
+
+        // 1. 计算需要发送的总大小
+        size_t totalSize = sizeof(uint32_t) * 10;  // 固定大小的成员
+        qDebug() << "cmd_file_info.file_num:" << cmd_file_info.file_num;
+        totalSize += sizeof(File_Info) * cmd_file_info.file_num;  // 文件信息数组的大小
+        qDebug() << "totalSize:" << totalSize;
+        // 2. 创建缓冲区
+        QByteArray buffer;
+        buffer.reserve(totalSize);
+        QDataStream stream(&buffer, QIODevice::WriteOnly);
+        stream.setByteOrder(QDataStream::LittleEndian);  // 设置字节序
+
+        // 3. 写入固定大小的成员
+        stream << cmd_file_info.order_head
+              << cmd_file_info.head
+              << cmd_file_info.source_ID
+              << cmd_file_info.dest_ID
+              << cmd_file_info.oper_type
+              << cmd_file_info.oper_ID
+              << cmd_file_info.package_num
+              << cmd_file_info.file_num;
+
+        // 4. 写入文件信息数组
+        for (uint32_t i = 0; i < cmd_file_info.file_num; ++i) {
+            // 写入每个文件名
+            for (int j = 0; j < 64; ++j) {
+                stream << quint16(cmd_file_info.file_name[i].name[j]);
+            }
+        }
+
+        // 5. 写入校验码和包尾
+        stream << cmd_file_info.check
+              << cmd_file_info.end;
+
+        // 6. 发送数据
+        QString log = QString("%1:正在执行批量删除[%2]操作.").arg(getNowTime().arg(m_TreeItemInfo.name));
+        ui->textBrowser_log->append(log);
+        //记录操作类型
+        lastOrderType = TYPE::DELETE;
+        emit sign_sendLenCmd(buffer,totalSize);
+
+//        qint64 bytesWritten = m_socket->write(buffer, totalSize);
+////        qint64 bytesWritten = m_socket->write(buffer);
+////        qint64 bytesWritten = m_socket->write(buffer, buffer.size());
+
+//        // 确保数据被写入
+//        m_socket->flush();
+
+
+//        //主线程中解析回复
+//        if (bytesWritten < 0)
+//        {
+//            qDebug() << "批量删除文件指令下发失败：" << m_socket->errorString();
+//            QString time = StaticGlobalMethod::getNowTime();
+//            QString log = QString("%1: 文件夹 [%2] 删除失败（指令下发失败）.").arg(time);
+//            ui->textBrowser_log->append(log);
+//        }
+//        else
+//        {
+//            int replayType = checkCommonReplayType();
+//            if (replayType == 11) {
+//                QString time = StaticGlobalMethod::getNowTime();
+//                QString log = QString("%1: 文件夹 [%2] 删除成功.").arg(time).arg(m_TreeItemInfo.name);
+//                ui->textBrowser_log->append(log);
+
+//                QMessageBox::information(this, tr("成功"), tr("删除文件夹指令下发成功"));
+//                 //执行刷新树操作
+//                QTimer::singleShot(1000, [this](){
+//                    slotRefresh();
+//                });
+
+//            } else {
+//                QString time = StaticGlobalMethod::getNowTime();
+//                QString log = QString("%1: 文件夹 [%2] 删除失败(通用应答失败).").arg(time).arg(m_TreeItemInfo.name);
+//                ui->textBrowser_log->append(log);
+//            }
+        //        }
+}
+
 void MainWindow::slotClose()   //关闭文件
 {
     //qDebug()<<"关闭文件操作";
@@ -1231,6 +1548,7 @@ void MainWindow::slot_StandardItemModel(QStandardItemModel *data)
 {
 
     //qDebug() << "接收到目录树信息";
+    Model=data;//LYH 2.20
     ui->treeView->setModel(data);
     ui->treeView->expandAll();
 
@@ -1502,6 +1820,16 @@ void MainWindow::slot_showSpeed(uint data)
 void MainWindow::slot_udpInfo()
 {
     m_udpInfoWidget->show();
+}
+
+void MainWindow::onTreeViewClicked(const QModelIndex &index)
+{
+    if(!index.isValid()) return; //确认索引有效
+
+    if(dlg2)
+    {
+        dlg2->setPath(m_TreeItemInfo.path);
+    }
 }
 
 

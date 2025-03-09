@@ -1,6 +1,7 @@
 FORMS += \
     $$PWD/diskconfirm.ui \
     $$PWD/dlg_acquisition.ui \
+    $$PWD/dlg_delete.ui \
     $$PWD/dlgexportdata.ui \
     $$PWD/dlgfileorfolder.ui \
     $$PWD/dlgplaybackdata.ui \
@@ -13,6 +14,7 @@ FORMS += \
 HEADERS += \
     $$PWD/diskconfirm.h \
     $$PWD/dlg_acquisition.h \
+    $$PWD/dlg_delete.h \
     $$PWD/dlgexportdata.h \
     $$PWD/dlgfileorfolder.h \
     $$PWD/dlgplaybackdata.h \
@@ -24,6 +26,7 @@ HEADERS += \
 SOURCES += \
     $$PWD/diskconfirm.cpp \
     $$PWD/dlg_acquisition.cpp \
+    $$PWD/dlg_delete.cpp \
     $$PWD/dlgexportdata.cpp \
     $$PWD/dlgfileorfolder.cpp \
     $$PWD/dlgplaybackdata.cpp \

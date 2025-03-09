@@ -44,6 +44,7 @@ public:
 
 public slots:
     void slot_getCmd(const QByteArray &cmd);
+    void slot_getLenCmd(const QByteArray &cmd,const int &len);
     void slot_addTcpHead(const QString &path,double p,double hz);
 
 signals:

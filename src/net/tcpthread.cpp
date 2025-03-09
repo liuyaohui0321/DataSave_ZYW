@@ -36,6 +36,31 @@ void TCPThread::slot_getCmd(const QByteArray &cmd)
                 //qDebug()<<"指令发送失败";
             }
             else{
+                qDebug()<<"指令发送成功";
+            }
+        }
+        else
+        {
+            //qDebug()<<"#########################";
+            emit sign_tcpNotConnect();
+        }
+    }
+
+}
+
+void TCPThread::slot_getLenCmd(const QByteArray &cmd,const int &len)
+{
+    if(m_tcpsocket!=nullptr)
+    {
+        QAbstractSocket::SocketState state = m_tcpsocket->state();
+        //qDebug()<<"TCP的连接状态 = "<<state;
+        if(state == QAbstractSocket::ConnectedState )
+        {
+            quint64 bytesWritten = m_tcpsocket->write(cmd);
+            if(bytesWritten<0){
+                //qDebug()<<"指令发送失败";
+            }
+            else{
                 //qDebug()<<"指令发送成功";
             }
         }

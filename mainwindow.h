@@ -22,6 +22,7 @@
 #include "src/dialog/login.h"
 #include "src/net/udpthread.h"
 #include "src/dialog/udpwidget.h"
+#include "src/dialog/dlg_delete.h"
 
 
 QT_BEGIN_NAMESPACE
@@ -63,11 +64,15 @@ public:
     //void playBack(ReadMode mode,BackGTH gth,const int &count);    //回访
     //void stopPlayBack();    //停止回放
     void exportFile(const NetworkPortType &type);    //发送导出指令
-    //void acquisition(const QString &path);    //采集
-    //void stopAcquisition(const QString &path);    //停止采集
+    void acquisition(const QString &path);    //采集
+    void stopAcquisition(const QString &path);    //停止采集
+
+    void DeleteOne();  //单个删除
+    void DeleteMore(int &num,QStringList &data);  //批量删除
 
 signals:
     void sign_sendCmd(const QByteArray &command);
+    void sign_sendLenCmd(const QByteArray &command,const int &len);
 
     void sign_addTcpFileHead(const QString &path,double p,double hz);  //给文件添加功率和采样hz
     void sign_addUdpFileHead(const QString &path,double p,double hz);
@@ -91,6 +96,7 @@ private slots:
     void slot_onItemSelected();     //点击任意节点获取信息
     void slot_showSpeed(uint data);     //速度的应答
     void slot_udpInfo();        //udp连接配置
+    void onTreeViewClicked(const QModelIndex& index);//LYH 2.14
 
     //右键菜单相关
     void slotRefresh();//刷新
@@ -152,7 +158,15 @@ private:
     };
     int lastOrderType = 0;
 
-
+private:
+//    DlgPlayBackData* dlg;               // 添加指向回放对话框的指针   LYH 2.14
+//    dlg_acquisition* dlg1;              // 添加指向采集对话框的指针   LYH 2.14
+    dlg_delete* dlg2;                   // 添加指向删除对话框的指针   LYH 2.19
+//    dlg_multifile_play_back* dlg3;      // 添加指向多文件回放对话框的指针      LYH 2.19
+//    DlgExportData* dlg4;                // 添加指向导出数据对话框的指针        LYH 2.24
+//    dlg_percent_export_data *dlg5;      // 添加指向百分比导出数据对话框的指针   LYH 2.24
+//    dlg_export_moreFile_data *dlg6;     // 添加指向批量导出数据对话框的指针   LYH 2.24
+    QStandardItemModel *Model;
 
 };
 #endif // MAINWINDOW_H
