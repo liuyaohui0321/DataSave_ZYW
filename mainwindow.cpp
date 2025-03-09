@@ -7,7 +7,7 @@
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
-    , ui(new Ui::MainWindow),dlg1(nullptr),dlg2(nullptr),dlg4(nullptr),dlg5(nullptr),dlg6(nullptr)
+    , ui(new Ui::MainWindow),dlg(nullptr),dlg1(nullptr),dlg2(nullptr),dlg3(nullptr),dlg4(nullptr),dlg5(nullptr),dlg6(nullptr)
 {
     ui->setupUi(this);
     init();
@@ -124,10 +124,15 @@ void MainWindow::statebarInit() {
     powerShow = new QLabel(this);
     powerShow->setFixedWidth(50);
     QLabel *W = new QLabel("W", this);
-    QLabel *kaijiLabel = new QLabel("存盘速度:", this);
+    QLabel *kaijiLabel = new QLabel("存盘/读盘速度:", this);
     kaijiShow = new QLabel(this);
     kaijiShow->setFixedWidth(50);
     QLabel *ci = new QLabel("MB/s", this);
+
+    QLabel *fiberState = new QLabel("光纤通断状态:", this);
+    fiberStateShow = new QLabel(this);
+    fiberStateShow->setFixedWidth(50);
+
     pbtn_stateBarRefresh = new QPushButton("刷新磁盘状态", this);
     pbtn_stateBarRefresh->setFixedWidth(120);
     //状态栏的刷新
@@ -149,6 +154,8 @@ void MainWindow::statebarInit() {
     spacer7->setFixedWidth(30);
     QLabel *spacer8 = new QLabel();
     spacer8->setFixedWidth(30);
+    QLabel *spacer9 = new QLabel();
+    spacer9->setFixedWidth(20);
 
     //将添加的控件放到状态栏上
     ui->statusbar->addWidget(totalLabel);
@@ -188,6 +195,10 @@ void MainWindow::statebarInit() {
     ui->statusbar->addWidget(kaijiShow);
     ui->statusbar->addWidget(ci);
     ui->statusbar->addWidget(spacer8);
+
+    ui->statusbar->addWidget(fiberState);
+    ui->statusbar->addWidget(fiberStateShow);
+    ui->statusbar->addWidget(spacer9);
 
     ui->statusbar->addWidget(pbtn_stateBarRefresh);
 }
@@ -867,6 +878,140 @@ void MainWindow::DeleteMore(int &num,QStringList &data)
         //        }
 }
 
+void MainWindow::MultiFilePlayBack()
+{
+    int num=0,j=0;
+    Cmd_MoreFilePlayBack_Info  cmd_MorefilePlayBack_info={0};
+    QString strLog;
+    if (dlg3)
+    {
+        dlg3->show();
+        return; // 如果对话框已经存在，直接返回
+    }
+    // 创建对话框对象时使用new分配在堆上（防止局部变量被销毁）
+    dlg3 = new dlg_multifile_play_back(m_TreeItemInfo.path, this);
+    // 设置关闭时自动删除（重要！防止内存泄漏）
+    dlg3->setAttribute(Qt::WA_DeleteOnClose);
+
+    // 连接对话框的关闭信号，确保在关闭时将指针置为nullptr
+    connect(dlg3, &dlg_multifile_play_back::finished, this, [=]() {
+        dlg3 = nullptr; // 对话框关闭时将指针置为nullptr
+    });
+    // 使用show()代替exec()显示非模态对话框
+    dlg3->show();
+    qDebug() << "多文件操作";
+//    auto mode = dlg3->getReadMode();
+//    auto cnt = dlg3->getLoopCnt();
+    auto gth = dlg3->getPlaybackChannel();
+    connect(dlg3, &dlg_multifile_play_back::accepted, this, [=]()mutable
+    {
+        // 获取选中项
+        QItemSelectionModel *selectionModel = ui->treeView->selectionModel();
+        QModelIndexList selectedIndexes = selectionModel->selectedIndexes();
+        // 提取数据（假设为QStandardItemModel）
+        QStringList selectedTexts;
+        foreach (const QModelIndex &index, selectedIndexes)
+        {
+            if (index.column() == 0)
+            {
+                QString path = buildPath(index);
+    //          qDebug() << "path：" << path;
+                selectedTexts << path;
+                num++;
+            }
+        }
+        // 使用selectedTexts进行后续操作
+        // qDebug() << "选中的项：" << selectedTexts;
+         qDebug() << "num：" << num;
+        cmd_MorefilePlayBack_info.order_head = ORDERHEAD;
+        cmd_MorefilePlayBack_info.head = DSV_PACKET_HEADER;
+        cmd_MorefilePlayBack_info.source_ID = 0;
+        cmd_MorefilePlayBack_info.dest_ID = 0;
+        cmd_MorefilePlayBack_info.oper_type = 0xD2;
+        cmd_MorefilePlayBack_info.oper_ID = 0x08;
+        cmd_MorefilePlayBack_info.package_num = 0;
+        cmd_MorefilePlayBack_info.file_num=num;
+        cmd_MorefilePlayBack_info.read_func=0;     //读取方式
+//        cmd_MorefilePlayBack_info.read_xunhuan_cnt=cnt; //循环读取次数
+        cmd_MorefilePlayBack_info.file_name = new File_Info[num];
+
+        foreach (const QString& str, selectedTexts)
+        {
+            qDebug() <<"str:"<< str;
+            std::u16string utf16Str = str.toStdU16String();
+            size_t length = utf16Str.size();
+            for (size_t i = 0; i < 64; ++i)
+            {
+                if (i < length)
+                    cmd_MorefilePlayBack_info.file_name[j].name[i] = utf16Str[i];
+                else
+                    cmd_MorefilePlayBack_info.file_name[j].name[i] = 0;
+            }
+            j++;
+        }
+        cmd_MorefilePlayBack_info.check = 0;
+        cmd_MorefilePlayBack_info.end = DSV_PACKET_TAIL;
+        // 设置 X1 (回放通道)
+        switch (gth)
+        {
+            case BackGTH::GTH_NETWORK:
+                strLog ="单次读取网口";
+                cmd_MorefilePlayBack_info.read_func = 0;
+                break;
+            case BackGTH::GTH_1X:
+                strLog ="单次读取GTH_1X";
+                cmd_MorefilePlayBack_info.read_func = 16;
+                break;
+            case BackGTH::GTH_8X:
+                strLog ="单次读取GTH_8X";
+                cmd_MorefilePlayBack_info.read_func = 32;
+                break;
+        }
+        // 1. 计算需要发送的总大小
+        size_t totalSize = sizeof(uint32_t) * 11;  // 固定大小的成员
+        qDebug() << "cmd_Morefile_info.file_num:" << cmd_MorefilePlayBack_info.file_num;
+        totalSize += sizeof(File_Info) * cmd_MorefilePlayBack_info.file_num;  // 文件信息数组的大小
+        qDebug() << "totalSize:" << totalSize;
+        // 2. 创建缓冲区
+        QByteArray buffer;
+        buffer.reserve(totalSize);
+        QDataStream stream(&buffer, QIODevice::WriteOnly);
+        stream.setByteOrder(QDataStream::LittleEndian);  // 设置字节序
+
+        // 3. 写入固定大小的成员
+        stream << cmd_MorefilePlayBack_info.order_head
+              << cmd_MorefilePlayBack_info.head
+              << cmd_MorefilePlayBack_info.source_ID
+              << cmd_MorefilePlayBack_info.dest_ID
+              << cmd_MorefilePlayBack_info.oper_type
+              << cmd_MorefilePlayBack_info.oper_ID
+              << cmd_MorefilePlayBack_info.package_num
+              << cmd_MorefilePlayBack_info.read_func
+              << cmd_MorefilePlayBack_info.file_num;
+//              << cmd_MorefilePlayBack_info.read_xunhuan_cnt;
+
+        // 4. 写入文件信息数组
+        for (uint32_t i = 0; i < cmd_MorefilePlayBack_info.file_num; ++i) {
+            // 写入每个文件名
+            for (int j = 0; j < 64; ++j) {
+                stream << quint16(cmd_MorefilePlayBack_info.file_name[i].name[j]);
+            }
+        }
+
+        // 5. 写入校验码和包尾
+        stream << cmd_MorefilePlayBack_info.check
+              << cmd_MorefilePlayBack_info.end;
+
+        // 6. 发送数据
+        QString log = QString("%1:正在执行批量回放[%2]操作.").arg(getNowTime().arg(m_TreeItemInfo.name));
+        ui->textBrowser_log->append(log);
+        //记录操作类型
+        lastOrderType = TYPE::PLAYBACK;
+        emit sign_sendLenCmd(buffer,totalSize);
+        ui->treeView->setSelectionMode(QAbstractItemView::SingleSelection);
+    });
+}
+
 void MainWindow::slotClose()   //关闭文件
 {
     //qDebug()<<"关闭文件操作";
@@ -1199,6 +1344,118 @@ void MainWindow::copyFileOrFolder(const QString &newpath) {
     }
 }
 
+void MainWindow::playBack(ReadMode mode, BackGTH gth, const int &count)
+{
+    if(m_TreeItemInfo.type != File)
+    {
+        qDebug()<<"选择的不是文件";
+        QString log = QString("%1: [%2] 是一个文件夹，请选择一个文件开始读取.").arg(getNowTime()).arg(m_TreeItemInfo.name);
+        ui->textBrowser_log->append(log);
+        return;
+    }
+
+    stateShow->setText("读取中...");
+    stateShow->setStyleSheet("color: green;");
+
+
+    //下发内容,我只需要选择文件，读取就可以了，其他不用管
+    Cmd_Read_File_Func_Info cmd_read_file_func_info;
+    cmd_read_file_func_info.order_head = ORDERHEAD;
+    cmd_read_file_func_info.head = DSV_PACKET_HEADER;
+    cmd_read_file_func_info.source_ID = 0;
+    cmd_read_file_func_info.dest_ID = 0;
+    cmd_read_file_func_info.oper_type = 0xD2;
+    cmd_read_file_func_info.oper_ID = 0x04;
+    cmd_read_file_func_info.package_num = 0;
+    std::u16string utf16Str_para1 = m_TreeItemInfo.path.toStdU16String();
+    size_t length1 = utf16Str_para1.size();
+    for (size_t i = 0; i < 1024; ++i)
+    {
+        if(i<length1)
+            cmd_read_file_func_info.file_address[i] = utf16Str_para1[i];
+        else
+            cmd_read_file_func_info.file_address[i]=0;
+    }
+
+    // 初始化 read_func
+    cmd_read_file_func_info.read_func = 0;
+QString strLog;
+// 设置 X1 (回放通道)
+    if (ReadMode::ReadOnce == mode) {
+        switch (gth) {
+            case BackGTH::GTH_NETWORK:
+                strLog ="单次读取网口";
+                cmd_read_file_func_info.read_func = 0;
+                break;
+            case BackGTH::GTH_1X:
+                strLog ="单次读取GTH_1X";
+                cmd_read_file_func_info.read_func = 16;
+                break;
+            case BackGTH::GTH_8X:
+                strLog ="单次读取GTH_8X";
+                cmd_read_file_func_info.read_func = 32;
+                break;
+        }
+    }
+    else if(ReadMode::LoopRead == mode) {
+            switch (gth) {
+                case BackGTH::GTH_NETWORK:
+                    strLog = QString(" 模式为：循环回放网口，次数为:%1").arg(count);
+                    cmd_read_file_func_info.read_func = 256;
+                    break;
+                case BackGTH::GTH_1X:
+                    strLog = QString(" 模式为：循环回放GTH_1X，次数为:%1").arg(count);
+                    cmd_read_file_func_info.read_func = 272;
+                    break;
+                case BackGTH::GTH_8X:
+                    strLog = QString(" 模式为：循环回放GTH_8X，次数为:%1").arg(count);
+                    cmd_read_file_func_info.read_func = 288;
+                    break;
+            }
+        }
+    cmd_read_file_func_info.read_xunhuan_cnt = count;
+    cmd_read_file_func_info.check = 0;
+    cmd_read_file_func_info.end = DSV_PACKET_TAIL;
+    QByteArray sendData = QByteArray((char *) (&cmd_read_file_func_info), sizeof(Cmd_Read_File_Func_Info));
+
+    QString log = QString("%1:正在执行回放[%2]操作.").arg(getNowTime().arg(m_TreeItemInfo.name));
+    ui->textBrowser_log->append(log);
+    //记录操作类型
+    lastOrderType = TYPE::PLAYBACK;
+    emit sign_sendCmd(sendData);
+}
+
+void MainWindow::stopPlayBack()
+{
+    //下发内容,我只需要选择文件，读取就可以了，其他不用管
+    Cmd_File_Acquisition_Info cmd_file_acquisition_info;
+    cmd_file_acquisition_info.order_head = ORDERHEAD;//0xBCBCAAAA
+    cmd_file_acquisition_info.package_head = DSV_PACKET_HEADER;//0x55555555
+    cmd_file_acquisition_info.source_ID = 0;
+    cmd_file_acquisition_info.dest_ID = 0;
+    cmd_file_acquisition_info.oper_type = 0xD2;
+    cmd_file_acquisition_info.oper_ID = 0x06;
+    cmd_file_acquisition_info.package_num = 0;
+    std::u16string utf16Str_para1 = m_TreeItemInfo.path.toStdU16String();
+    size_t length1 = utf16Str_para1.size();
+    for (size_t i = 0; i < 1024; ++i)
+    {
+        if(i<length1)
+            cmd_file_acquisition_info.file_address[i] = utf16Str_para1[i];
+        else
+            cmd_file_acquisition_info.file_address[i]=0;
+    }
+
+    cmd_file_acquisition_info.check_code = 0;
+    cmd_file_acquisition_info.package_tail = DSV_PACKET_TAIL;//0xAAAAAAAA
+    QByteArray sendData = QByteArray((char *) (&cmd_file_acquisition_info), sizeof(Cmd_File_Acquisition_Info));
+
+    QString log = QString("%1:正在执行停止回放[%2]操作.").arg(getNowTime().arg(m_TreeItemInfo.name));
+    ui->textBrowser_log->append(log);
+    //记录操作类型
+    lastOrderType = TYPE::stopPLAYBACK;
+    emit sign_sendCmd(sendData);
+}
 void MainWindow::slotWrite() //写入
 {
     //qDebug()<<"写入操作";
@@ -1213,6 +1470,54 @@ void MainWindow::slotStopWrite() //停止写入
 void MainWindow::slotPlayBack() //回放
 {
     //qDebug()<<"回放操作";
+    if (dlg)
+    {
+        dlg->show();
+        return; // 如果对话框已经存在，直接返回
+    }
+    // 创建对话框对象时使用new分配在堆上（防止局部变量被销毁）
+//    DlgPlayBackData* dlg = new DlgPlayBackData(m_TreeItemInfo.path, this);
+     dlg = new DlgPlayBackData(m_TreeItemInfo.path, this);
+    // 设置关闭时自动删除（重要！防止内存泄漏）
+    dlg->setAttribute(Qt::WA_DeleteOnClose);
+//    connect(ui->treeView, &QTreeView::clicked, this, &MainWindow::onTreeViewClicked);
+
+    // 连接对话框的关闭信号，确保在关闭时将指针置为nullptr
+    connect(dlg, &DlgPlayBackData::finished, this, [=]() {
+        dlg = nullptr; // 对话框关闭时将指针置为nullptr
+    });
+    // 使用show()代替exec()显示非模态对话框
+    dlg->show();
+    // 连接对话框的完成信号（使用lambda捕获this指针）
+    connect(dlg, &DlgPlayBackData::accepted, this, [=](){
+        if(dlg->getMode() == 1) {
+            qDebug() << "点击开始回放";
+            auto mode = dlg->getReadMode();
+            auto cnt = dlg->getLoopCnt();
+            auto channel = dlg->getPlaybackChannel();
+            playBack(static_cast<ReadMode>(mode), static_cast<BackGTH>(channel), cnt);
+//            isWaitingResponse = true;
+        }
+        else if (dlg->getMode() == 2) {
+            qDebug() << "点击停止回放";
+            stopPlayBack();
+//            isWaitingResponse = true;
+        }
+        else if (dlg->getMode() == 3){
+            qDebug() << "点击多文件回放";
+            dlg->close();
+            ui->treeView->setSelectionMode(QAbstractItemView::ExtendedSelection);
+            MultiFilePlayBack();
+        }
+        else {
+            qDebug() << "未知操作";
+        }
+    });
+
+    // 可选：处理对话框取消/关闭的情况
+    connect(dlg, &DlgPlayBackData::rejected, this, [](){
+        qDebug() << "对话框被取消或关闭";
+    });
 }
 
 void MainWindow::slotExport() //导出
@@ -2235,6 +2540,10 @@ void MainWindow::onTreeViewClicked(const QModelIndex &index)
 {
     if(!index.isValid()) return; //确认索引有效
 
+    if(dlg)
+    {
+        dlg->setPath(m_TreeItemInfo.path);
+    }
     if(dlg1)
     {
         dlg1->setPath(m_TreeItemInfo.path);
@@ -2242,6 +2551,10 @@ void MainWindow::onTreeViewClicked(const QModelIndex &index)
     if(dlg2)
     {
         dlg2->setPath(m_TreeItemInfo.path);
+    }
+    if(dlg3)
+    {
+        dlg3->setPath(m_TreeItemInfo.path);
     }
     if(dlg4)
     {

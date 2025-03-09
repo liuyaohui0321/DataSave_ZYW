@@ -16,14 +16,14 @@
 #include "src/dialog/diskconfirm.h"
 //#include "src/dialog/dlgexportdata.h"
 #include "src/dialog/dlgfileorfolder.h"
-#include "src/dialog/dlgplaybackdata.h"
+#include "src/dialog/dlg_play_back_data.h"
 #include "src/dialog/dlgwritedata.h"
 #include "src/dialog/dlg_acquisition.h"
 #include "src/dialog/login.h"
 #include "src/net/udpthread.h"
 #include "src/dialog/udpwidget.h"
 #include "src/dialog/dlg_delete.h"
-
+#include "src/dialog/dlg_multifile_play_back.h"
 #include "src/dialog/dlg_export_data.h"
 #include "src/dialog/dlg_percent_export_data.h"
 #include "src/dialog/dlg_export_morefile_data.h"
@@ -76,6 +76,7 @@ public:
 
     void DeleteOne();  //单个删除
     void DeleteMore(int &num,QStringList &data);  //批量删除
+    void MultiFilePlayBack(); //批量回放
 
 signals:
     void sign_sendCmd(const QByteArray &command);
@@ -149,6 +150,7 @@ private:
     QLabel *tShow;
     QLabel *powerShow;
     QLabel *kaijiShow;
+    QLabel *fiberStateShow;
     QPushButton *pbtn_stateBarRefresh;  //底部的状态刷新按钮
     //顶部菜单栏空间
 
@@ -166,10 +168,10 @@ private:
     int lastOrderType = 0;
 
 private:
-//    DlgPlayBackData* dlg;               // 添加指向回放对话框的指针   LYH 2.14
+    DlgPlayBackData* dlg;               // 添加指向回放对话框的指针   LYH 2.14
     dlg_acquisition* dlg1;              // 添加指向采集对话框的指针   LYH 2.14
     dlg_delete* dlg2;                   // 添加指向删除对话框的指针   LYH 2.19
-//    dlg_multifile_play_back* dlg3;      // 添加指向多文件回放对话框的指针      LYH 2.19
+    dlg_multifile_play_back* dlg3;      // 添加指向多文件回放对话框的指针      LYH 2.19
     DlgExportData* dlg4;                // 添加指向导出数据对话框的指针        LYH 2.24
     dlg_percent_export_data *dlg5;      // 添加指向百分比导出数据对话框的指针   LYH 2.24
     dlg_export_moreFile_data *dlg6;     // 添加指向批量导出数据对话框的指针   LYH 2.24
