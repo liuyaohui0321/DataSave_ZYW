@@ -1685,7 +1685,8 @@ void MainWindow::exportFile(const NetworkPortType &type,uint32_t percent,uint32_
     cmd_export_file_func_info.end = DSV_PACKET_TAIL;
     QByteArray sendData = QByteArray((char *) (&cmd_export_file_func_info), sizeof(Cmd_Export_File_Func_Info));
 
-    QString log = QString("%1:正在执行导出文件[%2]操作.").arg(getNowTime().arg(m_TreeItemInfo.name));
+    QString log = QString("%1:正在执行导出文件[%2]操作.").arg(getNowTime()).arg(m_TreeItemInfo.name);
+//    QString log = QString("%1:正在执行导出文件[%2]操作 大小:[%3].").arg(getNowTime()).arg(m_TreeItemInfo.name).arg(m_ExportFileInfo.size);
     ui->textBrowser_log->append(log);
     //记录操作类型
     lastOrderType = TYPE::EXPORT;

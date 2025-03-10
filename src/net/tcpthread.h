@@ -19,11 +19,11 @@ class TCPThread : public QThread
 public:
     explicit TCPThread(QObject *parent = nullptr);
 
-    void setExportModule(bool b)
-    {
-        checkIfMvpp = b;
-        //qDebug()<<"接收线程中的mvpp标志位 = "<<checkIfMvpp;
-    }
+//    void setExportModule(bool b)
+//    {
+//        checkIfMvpp = b;
+//        //qDebug()<<"接收线程中的mvpp标志位 = "<<checkIfMvpp;
+//    }
 
     void setExportFileInfo(const ExportFileInfo &info)
     {
@@ -82,7 +82,7 @@ private:
 
     QByteArray m_dataBuffer;        //缓存区
 
-    bool checkIfMvpp = false;
+//    bool checkIfMvpp = false;
     ExportFileInfo tcp_exportFileInfo;//导出文件信息
 
     QTimer *m_timer;

@@ -114,7 +114,8 @@ void TCPThread::onReadyRead()
     }
 
     //应答帧
-    if(tcp_exportFileInfo.isReceivingFileInfo==false && checkIfMvpp==false)
+//    if(tcp_exportFileInfo.isReceivingFileInfo==false && checkIfMvpp==false)
+    if(tcp_exportFileInfo.isReceivingFileInfo==false)
     {
         m_dataBuffer.append(data);
         if (m_dataBuffer.isEmpty()) {
@@ -136,16 +137,17 @@ void TCPThread::onReadyRead()
             //qDebug() << "没有找到完整的数据包，退出当前检查";
         }
     }
-    else if(tcp_exportFileInfo.isReceivingFileInfo==true  && checkIfMvpp==false)
+//    else if(tcp_exportFileInfo.isReceivingFileInfo==true  && checkIfMvpp==false)
+    else if(tcp_exportFileInfo.isReceivingFileInfo==true)
     {
         //qDebug()<<"收到了要导出的数据,正常模式导出";
         processFileData(data);  //接收要导出的数据
     }
-    else if(tcp_exportFileInfo.isReceivingFileInfo==true  && checkIfMvpp==true)
-    {
-        //qDebug()<<"收到了要导出的数据，使用mvpp模式导出";
-        processFileDataMVPP(data);  //接收要导出的数据
-    }
+//    else if(tcp_exportFileInfo.isReceivingFileInfo==true  && checkIfMvpp==true)
+//    {
+//        //qDebug()<<"收到了要导出的数据，使用mvpp模式导出";
+//        processFileDataMVPP(data);  //接收要导出的数据
+//    }
     else
     {
         //qDebug()<<"TCP收到的数据判断错误";
