@@ -2253,21 +2253,21 @@ void MainWindow::slot_haveNewUdpConnect(const QString ip, const quint16 port)
 }
 
 //接收磁盘的信息
-void MainWindow::slot_recvDiskData(const Cmd_Disk_State_Info *data)
+void MainWindow::slot_recvDiskData(const Cmd_Disk_State_Info &data)
 {
     //qDebug() << "收到了磁盘的状态信息";
     ui->textBrowser_log->append(QString("%1: 收到了回复的磁盘状态信息.").arg(getNowTime()));
 
-    QString diskTotal = QString::number((data->disk_total) / (1024 * 1024));
+    QString diskTotal = QString::number((data.disk_total) / (1024 * 1024));
     totalShow->setText(diskTotal);
-    QString diskUsed = QString::number((data->disk_used) / (1024 * 1024));
+    QString diskUsed = QString::number((data.disk_used) / (1024 * 1024));
     usedShow->setText(diskUsed);
-    QString diskRest = QString::number((data->disk_rest) / (1024 * 1024));
+    QString diskRest = QString::number((data.disk_rest) / (1024 * 1024));
     restShow->setText(diskRest);
-    QString fileNum = QString::number(data->file_num);
+    QString fileNum = QString::number(data.file_num);
     fileNumShow->setText(fileNum);
 
-    QString state = QString::number(data->disk_state);
+    QString state = QString::number(data.disk_state);
     if (state == "1")
         stateShow->setText("空闲");
     if (state == "2")
@@ -2285,9 +2285,9 @@ void MainWindow::slot_recvDiskData(const Cmd_Disk_State_Info *data)
     else
         stateShow->setText("无效");
 
-    QString T = QString::number(data->disk_t);
+    QString T = QString::number(data.disk_t);
     tShow->setText(T);
-    QString power = QString::number(data->disk_power);
+    QString power = QString::number(data.disk_power);
     powerShow->setText(power);
 
 }

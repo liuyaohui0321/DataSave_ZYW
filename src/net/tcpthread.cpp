@@ -182,7 +182,7 @@ void TCPThread::processCompletePacket(QByteArray &data)
     if (head == HEAD && end == END && oper_type == 0xF2 && oper_ID == 0x01) {
         qDebug() << "收到磁盘状态回复消息";
         Cmd_Disk_State_Info diskInfo = readDataDiskState(data);
-        emit sign_diskData(&diskInfo);
+        emit sign_diskData(diskInfo);
     }
     if (head == HEAD && end == END && oper_type == 0xA2 && oper_ID == 0x03) {
         qDebug() << "文件、文件夹及磁盘管理操作结果通用应答";

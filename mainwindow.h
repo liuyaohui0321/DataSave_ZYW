@@ -93,7 +93,7 @@ public slots:
     void slot_haveNewConnection(const QString &client);   //获取到了新的tcp连接，只有显示作用
     void slot_haveNewUdpConnect(const QString ip,const quint16 port);
 
-    void slot_recvDiskData(const Cmd_Disk_State_Info *data);
+    void slot_recvDiskData(const Cmd_Disk_State_Info &data);
     void slot_StandardItemModel(QStandardItemModel *data);
     //void slot_recvCommonRespon(const Cmd_Response_Common_Info *data);
     void slot_newrecvCommonRespon(const quint32 &type,const quint32 &id,const quint32 &result);

@@ -2,6 +2,7 @@
 #define PROTOCOL_DISK_H
 
 #pragma pack(push, 1)  // 设置1字节对齐
+//#pragma pack(push, 4)  // 设置4字节对齐
 #include <stdint.h>
 #include <QString>
 #include <string>

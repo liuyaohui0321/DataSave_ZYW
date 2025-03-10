@@ -35,7 +35,7 @@ int main(int argc, char *argv[])
         qApp->setStyleSheet(file.readAll());
         file.close();
     }
-
+    qRegisterMetaType<Cmd_Disk_State_Info>("Cmd_Disk_State_Info");
     w.show();
     return a.exec();
 }
