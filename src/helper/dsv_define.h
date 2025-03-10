@@ -6,7 +6,7 @@
 
 #define DSV_PACKET_HEADER      0x55555555 // 包头
 #define DSV_PACKET_TAIL      0xAAAAAAAA// 包尾
-#define DSV_PORT  58511        //端口号
+#define DSV_PORT  8511        //端口号
 
 #define  DSV_WRITE_PACKAGE_SIZE  100*1024*1024
 
