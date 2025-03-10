@@ -129,7 +129,8 @@ private slots:
     void slot_diskAgainMount(); //磁盘重新挂载
     void slot_diskUnmount();    //磁盘解挂载
     void slot_stateBarRefresh(); //磁盘刷新状态
-
+    void updateStatusLabel(const QColor &color);
+    void setFiberStatus(FiberStatus status);
 
 private:
     Ui::MainWindow *ui;
@@ -149,7 +150,7 @@ private:
     QLabel *stateShow;
     QLabel *tShow;
     QLabel *powerShow;
-    QLabel *kaijiShow;
+    QLabel *SpeedShow;
     QLabel *fiberStateShow;
     QPushButton *pbtn_stateBarRefresh;  //底部的状态刷新按钮
     //顶部菜单栏空间

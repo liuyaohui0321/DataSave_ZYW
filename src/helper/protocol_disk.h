@@ -500,7 +500,7 @@ typedef struct
 
     uint32_t file_num;
     uint32_t disk_state;
-    int32_t disk_t;
+    uint32_t disk_t;
     uint32_t disk_power;
     uint32_t disk_open_num;
 

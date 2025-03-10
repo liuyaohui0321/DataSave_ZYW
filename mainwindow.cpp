@@ -124,15 +124,15 @@ void MainWindow::statebarInit() {
     powerShow = new QLabel(this);
     powerShow->setFixedWidth(50);
     QLabel *W = new QLabel("W", this);
-    QLabel *kaijiLabel = new QLabel("存盘/读盘速度:", this);
-    kaijiShow = new QLabel(this);
-    kaijiShow->setFixedWidth(50);
+    QLabel *SpeedShowLabel = new QLabel("存盘/读盘速度:", this);
+    SpeedShow = new QLabel(this);
+    SpeedShow->setFixedWidth(50);
     QLabel *ci = new QLabel("MB/s", this);
 
     QLabel *fiberState = new QLabel("光纤通断状态:", this);
     fiberStateShow = new QLabel(this);
     fiberStateShow->setFixedWidth(50);
-
+    setFiberStatus(StatusUnknown);
     pbtn_stateBarRefresh = new QPushButton("刷新磁盘状态", this);
     pbtn_stateBarRefresh->setFixedWidth(120);
     //状态栏的刷新
@@ -191,8 +191,8 @@ void MainWindow::statebarInit() {
     ui->statusbar->addWidget(W);
     ui->statusbar->addWidget(spacer7);
 
-    ui->statusbar->addWidget(kaijiLabel);
-    ui->statusbar->addWidget(kaijiShow);
+    ui->statusbar->addWidget(SpeedShowLabel);
+    ui->statusbar->addWidget(SpeedShow);
     ui->statusbar->addWidget(ci);
     ui->statusbar->addWidget(spacer8);
 
@@ -2154,6 +2154,40 @@ void MainWindow::slot_stateBarRefresh()
 
 }
 
+void MainWindow::updateStatusLabel(const QColor &color)
+{
+    QPixmap pixmap(20, 20);
+    if (pixmap.isNull()) return;
+    pixmap.fill(Qt::transparent); // 透明背景
+
+    QPainter painter(&pixmap);
+    if (!painter.isActive()) return;
+    painter.setRenderHint(QPainter::Antialiasing); // 抗锯齿
+    painter.setBrush(color);       // 设置画刷颜色
+    painter.setPen(Qt::NoPen);     // 无边线
+    painter.drawEllipse(0, 0, 20, 20); // 绘制圆形
+
+    fiberStateShow->setPixmap(pixmap); // 设置图标
+    fiberStateShow->setText("");       // 清除文本
+}
+
+void MainWindow::setFiberStatus(FiberStatus status)
+{
+    switch (status)
+    {
+        case StatusUnknown:
+            fiberStateShow->setPixmap(QPixmap()); // 清除图标
+            fiberStateShow->setText("未知");       // 显示文本
+            break;
+        case StatusConnected:
+            updateStatusLabel(Qt::green);     // 绿色图标
+            break;
+        case StatusDisconnected:
+            updateStatusLabel(Qt::red);        // 红色图标
+            break;
+    }
+}
+
 void MainWindow::slot_CustomContextMenuRequested(const QPoint &pos)
 {
     //qDebug()<<"新工程中，右键显示自定义菜单栏菜单";
@@ -2528,7 +2562,7 @@ void MainWindow::slot_onItemSelected()
 
 void MainWindow::slot_showSpeed(uint data)
 {
-    kaijiShow->setText(QString::number(data));
+    SpeedShow->setText(QString::number(data));
 }
 
 void MainWindow::slot_udpInfo()

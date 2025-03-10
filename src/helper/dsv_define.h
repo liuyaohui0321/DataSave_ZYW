@@ -104,7 +104,11 @@ struct ExportFileInfo {
     bool  isReceivingFileInfo;//是否执行写入操作
 };
 
-
+enum FiberStatus {
+       StatusUnknown,
+       StatusConnected,
+       StatusDisconnected
+};
 
 
 
