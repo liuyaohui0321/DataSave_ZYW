@@ -252,6 +252,7 @@ void MainWindow::init()
     connect(m_tcp,&TCPThread::sign_getNewConnect,this,&MainWindow::slot_haveNewConnection);
     connect(this,&MainWindow::sign_sendCmd,m_tcp,&TCPThread::slot_getCmd);
     connect(this,&MainWindow::sign_sendLenCmd,m_tcp,&TCPThread::slot_getLenCmd);
+    connect(this,&MainWindow::sign_sendExportCap,m_tcp,&TCPThread::slot_getExportCap);
     connect(m_tcp,&TCPThread::sign_tcpNotConnect,this,[=](){
         QString log = QString("%1: 传输连接并未建立，请等待连接建立完成后，再进行操作！！！").arg(getNowTime());
         ui->textBrowser_log->append(log);
@@ -277,8 +278,10 @@ void MainWindow::init()
     //connect(m_tcp,&TCPThread::sign_commonData,this,&MainWindow::slot_recvCommonRespon);
     connect(m_tcp,&TCPThread::sign_newCommonData,this,&MainWindow::slot_newrecvCommonRespon);
 
+    connect(m_tcp, &TCPThread::sign_exportProgress, this, &MainWindow::onExportProgress);
+    connect(m_tcp, &TCPThread::sign_exportFinished, this, &MainWindow::onExportFinished);
 
-    connect(this,&MainWindow::sign_addTcpFileHead,m_tcp,&TCPThread::slot_addTcpHead);
+//    connect(this,&MainWindow::sign_addTcpFileHead,m_tcp,&TCPThread::slot_addTcpHead);
     connect(m_tcp,&TCPThread::sign_speed,this,&MainWindow::slot_showSpeed);
 
     m_udpInfoWidget = new udpWidget(this);
@@ -309,7 +312,7 @@ void MainWindow::init()
         ui->textBrowser_log->append(log);
     });
     connect(m_udp,&UDPThread::sign_mainShowUDP,this,&MainWindow::slot_haveNewUdpConnect);
-    connect(this,&MainWindow::sign_addUdpFileHead,m_udp,&UDPThread::slot_addHead);
+//    connect(this,&MainWindow::sign_addUdpFileHead,m_udp,&UDPThread::slot_addHead);
     connect(this,&MainWindow::sign_setUdpFilePath,m_udp,&UDPThread::slot_setPath);
 
     connect(m_udp,&UDPThread::sign_recvFinished,this,[=](){
@@ -1696,7 +1699,7 @@ void MainWindow::exportFile(const NetworkPortType &type,uint32_t percent,uint32_
     //记录操作类型
     lastOrderType = TYPE::EXPORT;
     emit sign_sendCmd(sendData);
-
+    emit sign_sendExportCap(m_ExportFileInfo.size);
 }
 
 void MainWindow::PercentExport()
@@ -2536,6 +2539,50 @@ void MainWindow::slot_newrecvCommonRespon(const quint32 &type,const quint32 &id,
             ui->textBrowser_log->append(log);
         }
     }
+}
+
+void MainWindow::onExportProgress(int percent)
+{
+    if (!progressDialog)
+    {
+        progressDialog = new QProgressDialog(this);
+        //设置尺寸策略
+        progressDialog->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+        // 设置最小尺寸
+        progressDialog->setMinimumSize(400, 150);
+        // 设置最大尺寸（如果需要限制最大尺寸）
+        progressDialog->setMaximumSize(800, 300);
+        progressDialog->setWindowTitle(tr("导出进度"));
+        progressDialog->setCancelButtonText(tr("停止导出")); // 取消按钮文本
+//        progressDialog->setCancelButton(nullptr); // 禁用取消按钮
+        progressDialog->setMinimumDuration(0);    // 立即显示
+        //如果使用非模态窗口，则注释掉下面语句
+        progressDialog->setModal(true); // 强制模态
+        // 连接取消按钮点击信号
+        connect(progressDialog, &QProgressDialog::canceled, this, &MainWindow::onStopExport);
+    }
+    progressDialog->setValue(percent);
+    progressDialog->show();
+}
+
+void MainWindow::onExportFinished()
+{
+    if (progressDialog)
+    {
+        progressDialog->close();
+        delete progressDialog;
+        progressDialog = nullptr;
+    }
+    QMessageBox::information(this, tr("完成"), tr("文件导出成功！"));
+}
+
+void MainWindow::onStopExport()
+{
+    if (m_tcp)
+    {
+        m_tcp->abortExport(); // 调用TCPThread的中止方法
+    }
+    QMessageBox::information(this, tr("提示"), tr("导出已中止"));
 }
 
 QString MainWindow::buildPath(QModelIndex index) {

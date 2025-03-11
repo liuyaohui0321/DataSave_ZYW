@@ -9,6 +9,7 @@
 #include <QPushButton>
 #include <QTcpServer>
 #include <qlineedit.h>
+#include <QProgressDialog>
 
 #include "src/contextmenu.h"
 #include "src/helper/protocol_disk.h"
@@ -82,8 +83,9 @@ public:
 signals:
     void sign_sendCmd(const QByteArray &command);
     void sign_sendLenCmd(const QByteArray &command,const int &len);
+    void sign_sendExportCap(const quint64 &len);
 
-    void sign_addTcpFileHead(const QString &path,double p,double hz);  //给文件添加功率和采样hz
+//    void sign_addTcpFileHead(const QString &path,double p,double hz);  //给文件添加功率和采样hz
     void sign_addUdpFileHead(const QString &path,double p,double hz);
 
       //tcp导出数据时，单独使用，创建名字
@@ -98,7 +100,9 @@ public slots:
     void slot_StandardItemModel(QStandardItemModel *data);
     //void slot_recvCommonRespon(const Cmd_Response_Common_Info *data);
     void slot_newrecvCommonRespon(const quint32 &type,const quint32 &id,const quint32 &result);
-
+    void onExportProgress(int percent);
+    void onExportFinished();
+    void onStopExport();
 
 private slots:
 
@@ -180,7 +184,7 @@ private:
     dlg_percent_export_data *dlg5;      // 添加指向百分比导出数据对话框的指针   LYH 2.24
     dlg_export_moreFile_data *dlg6;     // 添加指向批量导出数据对话框的指针   LYH 2.24
     QStandardItemModel *Model;
-
+    QProgressDialog* progressDialog = nullptr; // 导出进度对话框
 };
 
 class IPDialog : public QDialog

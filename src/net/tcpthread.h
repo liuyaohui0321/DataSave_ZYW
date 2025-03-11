@@ -40,12 +40,16 @@ public:
     Cmd_One_File_Info parseOneFileInfo(QByteArray &data, int &offset);
     Cmd_Catalog_Info parseCatalogInfo(QByteArray &data);
 
-    double p,hz;
+//    double p,hz;
 
 public slots:
     void slot_getCmd(const QByteArray &cmd);
     void slot_getLenCmd(const QByteArray &cmd,const int &len);
-    void slot_addTcpHead(const QString &path,double p,double hz);
+    void slot_getExportCap(const uint64_t &len);
+//    void slot_addTcpHead(const QString &path,double p,double hz);
+
+public:
+    void abortExport();
 
 signals:
     //用于告诉主窗口的信号
@@ -66,6 +70,8 @@ signals:
     //发送目录树信息
     void sign_sendDirectoryParser(QStandardItemModel *data);
     void sign_speed(uint data);     //获取存盘速度
+    void sign_exportProgress(int percent);
+    void sign_exportFinished();
 
 private slots:
     void slot_newConnection();      //建立新的连接
@@ -86,6 +92,8 @@ private:
     ExportFileInfo tcp_exportFileInfo;//导出文件信息
 
     QTimer *m_timer;
+    quint64 m_receivedBytes = 0;
+    quint64 m_totalBytes = 0;
 };
 
 #endif // TCPTHREAD_H

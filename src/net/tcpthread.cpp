@@ -15,6 +15,10 @@ TCPThread::TCPThread(QObject *parent)
         emit sign_waitConnect();
     }
     connect(m_tcpSever, &QTcpServer::newConnection, this, &TCPThread::slot_newConnection);
+    connect(this, &TCPThread::sign_exportProgress, [=](int percent)
+    {
+        m_receivedBytes = (percent == 100) ? 0 : m_receivedBytes;
+    });
 
     m_timer = new QTimer(this);
     connect(m_timer,&QTimer::timeout,this,[=](){
@@ -45,7 +49,6 @@ void TCPThread::slot_getCmd(const QByteArray &cmd)
             emit sign_tcpNotConnect();
         }
     }
-
 }
 
 void TCPThread::slot_getLenCmd(const QByteArray &cmd,const int &len)
@@ -73,17 +76,24 @@ void TCPThread::slot_getLenCmd(const QByteArray &cmd,const int &len)
 
 }
 
-void TCPThread::slot_addTcpHead(const QString &path,double p, double hz)
+void TCPThread::slot_getExportCap(const quint64 &len)
 {
-    QFile file(path);
-    if (!file.open(QIODevice::WriteOnly | QIODevice::Append)) {
-        qWarning() << "add head Failed to open file for writing:" <<file.fileName();
-        return;
-    }
-    file.write(reinterpret_cast<const char*>(&p),sizeof(double));
-    file.write(reinterpret_cast<const char*>(&hz),sizeof(double));
-    file.close();
+    m_totalBytes=len;
+    m_receivedBytes=0;
+    qDebug() << "m_totalBytes:" << m_totalBytes;
 }
+
+//void TCPThread::slot_addTcpHead(const QString &path,double p, double hz)
+//{
+//    QFile file(path);
+//    if (!file.open(QIODevice::WriteOnly | QIODevice::Append)) {
+//        qWarning() << "add head Failed to open file for writing:" <<file.fileName();
+//        return;
+//    }
+//    file.write(reinterpret_cast<const char*>(&p),sizeof(double));
+//    file.write(reinterpret_cast<const char*>(&hz),sizeof(double));
+//    file.close();
+//}
 
 
 void TCPThread::slot_newConnection()
@@ -242,6 +252,15 @@ void TCPThread::processFileData(const QByteArray& data)
         return;
     }
 
+    // 新增进度计算
+     m_receivedBytes += data.size();
+     int progress = static_cast<int>((m_receivedBytes * 100) / m_totalBytes);
+     emit sign_exportProgress(progress);  // 新增信号
+
+     if (progress >= 100) {
+         emit sign_exportFinished();  // 导出完成信号
+     }
+
     receivedFile.close();
 }
 
@@ -286,6 +305,17 @@ void TCPThread::processFileDataMVPP(const QByteArray &data)
         receivedFile.close();
         tempData.clear();
     }
+}
+
+void TCPThread::abortExport()
+{
+//    m_abortFlag = true;
+    if (m_tcpsocket)
+    {
+        m_tcpsocket->abort(); // 中止当前连接
+    }
+    m_receivedBytes = 0;
+    tcp_exportFileInfo.isReceivingFileInfo = false;
 }
 
 
