@@ -31,7 +31,7 @@ void ContextMenu::createActions()
     addLargeAction(tr("重命名"), ":/my/images/report_forms_primary_blue.png", SIGNAL(signalRename()),ButtonType::Rename);
 
     this->addSeparator();
-    addLargeAction(tr("写入"), ":/my/images/edit_2_primary_blue.png", SIGNAL(signalWrite()),ButtonType::Write);
+//    addLargeAction(tr("写入"), ":/my/images/edit_2_primary_blue.png", SIGNAL(signalWrite()),ButtonType::Write);
     addLargeAction(tr("回放"), ":/my/images/chevron_right_double_primary_blue.png", SIGNAL(signalPlayback()),ButtonType::PlayBack);
     addLargeAction(tr("导出"), ":/my/images/note_transpond_primary_blue.png", SIGNAL(signalExport()),ButtonType::Export);
     addLargeAction(tr("采集"), ":/my/images/edit_2_primary_blue.png", SIGNAL(signalAcquisition()),ButtonType::Acquisition);

@@ -37,16 +37,20 @@ void MainWindow::menubarInit()
     auto *diskOneAction = new QAction(QIcon(":/my/images/disk.png"), tr("磁盘格式化"), this);
     auto *diskTwoAction = new QAction(QIcon(":/my/images/disk.png"), tr("磁盘重新挂载"), this);
     auto *diskThreeAction = new QAction(QIcon(":/my/images/disk.png"), tr("磁盘解挂载"), this);
+    auto *diskFourAction = new QAction(QIcon(":/my/images/disk.png"), tr("磁盘IP地址设置"), this);
 
     disk_manager->addAction(diskOneAction);
+    disk_manager->addSeparator();       //添加分割线
     disk_manager->addAction(diskTwoAction);
     disk_manager->addSeparator();       //添加分割线
     disk_manager->addAction(diskThreeAction);
+    disk_manager->addSeparator();       //添加分割线
+    disk_manager->addAction(diskFourAction);
 
     auto connect_manager = ui->menubar->addMenu("连接配置");
-    auto *tcpAction = new QAction("千兆网连接配置",this);
+//    auto *tcpAction = new QAction("千兆网连接配置",this);
     auto *udpAction = new QAction("万兆网连接配置",this);
-    connect_manager->addAction(tcpAction);
+//    connect_manager->addAction(tcpAction);
     connect_manager->addAction(udpAction);
 
     connect(udpAction,&QAction::triggered,this,&MainWindow::slot_udpInfo);
@@ -54,6 +58,7 @@ void MainWindow::menubarInit()
     connect(diskOneAction, &QAction::triggered, this, &MainWindow::slot_diskFormat);
     connect(diskTwoAction, &QAction::triggered, this, &MainWindow::slot_diskAgainMount);
     connect(diskThreeAction, &QAction::triggered, this, &MainWindow::slot_diskUnmount);
+    connect(diskFourAction, &QAction::triggered, this, &MainWindow::showIPDialog);
 
     // 创建一个包含 QLabel 的 QWidget
     QWidget *rightWidget = new QWidget(this);
@@ -223,7 +228,7 @@ void MainWindow::init()
     connect(m_pContextMenu, &ContextMenu::signalMove, this, &MainWindow::slotMove);
     connect(m_pContextMenu, &ContextMenu::signalCopy, this, &MainWindow::slotCopy);
     connect(m_pContextMenu, &ContextMenu::signalExport, this, &MainWindow::slotExport);
-    connect(m_pContextMenu, &ContextMenu::signalWrite, this, &MainWindow::slotWrite);
+//    connect(m_pContextMenu, &ContextMenu::signalWrite, this, &MainWindow::slotWrite);
     connect(m_pContextMenu, &ContextMenu::signalPlayback, this, &MainWindow::slotPlayBack);
     connect(m_pContextMenu, &ContextMenu::signalAcquisition, this, &MainWindow::slotAcquisition);
 
@@ -2189,6 +2194,42 @@ void MainWindow::setFiberStatus(FiberStatus status)
     }
 }
 
+void MainWindow::showIPDialog()
+{
+    IPDialog *dialog = new IPDialog(this);
+    connect(dialog, &IPDialog::ipSelected, this, &MainWindow::updateIPData);
+    dialog->exec();
+    delete dialog;
+}
+
+void MainWindow::updateIPData(const QString &ipAddress)
+{
+    uint ips[4];
+    QStringList parts = ipAddress.split(".");
+    for (int i = 0; i < 4; ++i)
+    {
+        ips[i] = parts[i].toUInt();
+//        qDebug()<<value;
+    }
+    // 将 4 个部分合并为一个 uint
+    uint combinedIP = (ips[0] << 24) | (ips[1] << 16) | (ips[2] << 8) | ips[3];
+//    qDebug()<<combinedIP;
+
+    Cmd_Disk_IPSET cmd_disk_info;
+    cmd_disk_info.order_head = ORDERHEAD;
+    cmd_disk_info.head = DSV_PACKET_HEADER;
+    cmd_disk_info.source_ID = 0;
+    cmd_disk_info.dest_ID = 0;
+    cmd_disk_info.oper_type = 0xB2;
+    cmd_disk_info.oper_ID = 0x02;
+    cmd_disk_info.package_num = 0;
+    cmd_disk_info.IPADDR = combinedIP;
+    cmd_disk_info.check = 0;
+    cmd_disk_info.end = DSV_PACKET_TAIL;
+    QByteArray sendData = QByteArray((char *) (&cmd_disk_info), sizeof(Cmd_Disk_IPSET));
+    emit sign_sendCmd(sendData);
+}
+
 void MainWindow::slot_CustomContextMenuRequested(const QPoint &pos)
 {
     //qDebug()<<"新工程中，右键显示自定义菜单栏菜单";
@@ -2609,3 +2650,64 @@ void MainWindow::onTreeViewClicked(const QModelIndex &index)
 
 
 
+
+IPDialog::IPDialog(QWidget *parent): QDialog(parent)
+{
+    setWindowTitle("设置IP地址");
+    setFixedSize(500, 200);
+
+    QVBoxLayout *mainLayout = new QVBoxLayout(this);
+    // 添加IP地址输入区域（移到底部）
+    QHBoxLayout *ipInputLayout = new QHBoxLayout();
+    QLabel *ipLabel = new QLabel("IP地址:", this);
+    ipLineEdit = new QLineEdit(this);
+    ipLineEdit->setPlaceholderText("请输入IP地址");
+    ipLineEdit->setMinimumWidth(300); // 设置最小宽度
+
+    ipInputLayout->addWidget(ipLabel);
+    ipInputLayout->addWidget(ipLineEdit);
+    mainLayout->addLayout(ipInputLayout);
+
+    // 按钮布局
+    QHBoxLayout *buttonLayout = new QHBoxLayout();
+    QPushButton *okButton = new QPushButton("确定", this);
+    QPushButton *cancelButton = new QPushButton("取消", this);
+
+    buttonLayout->addStretch();
+    buttonLayout->addWidget(okButton);
+    buttonLayout->addWidget(cancelButton);
+    mainLayout->addLayout(buttonLayout);
+    // 连接信号槽
+    connect(okButton, &QPushButton::clicked, this, &IPDialog::onOKClicked);
+    connect(cancelButton, &QPushButton::clicked, this, &IPDialog::reject);
+}
+
+void IPDialog::onOKClicked()
+{
+    QString ipAddress = ipLineEdit->text().trimmed();
+
+    if (ipAddress.isEmpty()) {
+        QMessageBox::warning(this, "警告", "请输入IP地址");
+        return;
+    }
+
+    if (!validateIPAddress(ipAddress)) {
+        QMessageBox::warning(this, "警告", "请输入有效的IP地址");
+        return;
+    }
+    emit ipSelected(ipAddress);
+    accept();
+}
+
+bool IPDialog::validateIPAddress(const QString &ip)
+{
+    QStringList parts = ip.split(".");
+    if (parts.size() != 4) return false;
+
+    for (const QString &part : parts) {
+        bool ok;
+        int value = part.toInt(&ok);
+        if ((!ok)||(value < 0) || (value > 255)) return false;
+    }
+    return true;
+}

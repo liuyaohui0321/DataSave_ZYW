@@ -8,6 +8,7 @@
 #include <QLabel>
 #include <QPushButton>
 #include <QTcpServer>
+#include <qlineedit.h>
 
 #include "src/contextmenu.h"
 #include "src/helper/protocol_disk.h"
@@ -131,6 +132,9 @@ private slots:
     void slot_stateBarRefresh(); //磁盘刷新状态
     void updateStatusLabel(const QColor &color);
     void setFiberStatus(FiberStatus status);
+    void showIPDialog();
+    void updateIPData(const QString &ipAddress);
+
 
 private:
     Ui::MainWindow *ui;
@@ -167,7 +171,6 @@ private:
         UNUSE,REFRESH,ADDFOLDER,ADDFILE,DELETE,RENAME,MOVE,COPY,EXPORT,DISK_FORMAT,DISK_AGAINMOUNT,DISK_UNMOUNT,STOPAcquisition,Acquisition,PLAYBACK,stopPLAYBACK
     };
     int lastOrderType = 0;
-
 private:
     DlgPlayBackData* dlg;               // 添加指向回放对话框的指针   LYH 2.14
     dlg_acquisition* dlg1;              // 添加指向采集对话框的指针   LYH 2.14
@@ -179,4 +182,24 @@ private:
     QStandardItemModel *Model;
 
 };
+
+class IPDialog : public QDialog
+{
+    Q_OBJECT
+
+public:
+    IPDialog(QWidget *parent = nullptr);
+
+signals:
+    void ipSelected(const QString &ipAddress);
+
+private slots:
+    void onOKClicked();
+
+private:
+    QLineEdit *ipLineEdit;
+    bool validateIPAddress(const QString &ip);
+};
+
+
 #endif // MAINWINDOW_H

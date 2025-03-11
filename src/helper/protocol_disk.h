@@ -284,6 +284,22 @@ typedef struct
 
 } Cmd_Disk_Info;
 
+typedef struct
+{
+    uint32_t order_head;    //指令的头
+
+    //原协议内容
+    uint32_t head ;         //包头
+    uint32_t source_ID ;    //源组件ID，0
+    uint32_t dest_ID ;      //目的组件ID，0
+    uint32_t oper_type ;    //操作类型
+    uint32_t oper_ID ;      //操作ID
+    uint32_t package_num;   //包序列号，0
+    uint32_t IPADDR ;     //IP地址
+    uint32_t check;         //校验码
+    uint32_t end ;          //包尾
+
+} Cmd_Disk_IPSET;
 
 //5.4	文件读写操作
 //5.4.2	分包写入文件报文结构 第一包数据
