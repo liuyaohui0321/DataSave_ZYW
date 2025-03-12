@@ -15,10 +15,6 @@ TCPThread::TCPThread(QObject *parent)
         emit sign_waitConnect();
     }
     connect(m_tcpSever, &QTcpServer::newConnection, this, &TCPThread::slot_newConnection);
-    connect(this, &TCPThread::sign_exportProgress, [=](int percent)
-    {
-        m_receivedBytes = (percent == 100) ? 0 : m_receivedBytes;
-    });
 
     m_timer = new QTimer(this);
     connect(m_timer,&QTimer::timeout,this,[=](){
@@ -80,6 +76,8 @@ void TCPThread::slot_getExportCap(const quint64 &len)
 {
     m_totalBytes=len;
     m_receivedBytes=0;
+    m_abortFlag = false;
+    m_exportCompleted = false;
     qDebug() << "m_totalBytes:" << m_totalBytes;
 }
 
@@ -235,6 +233,11 @@ void TCPThread::processCompletePacket(QByteArray &data)
 
 void TCPThread::processFileData(const QByteArray& data)
 {
+    // 如果已经完成导出，忽略后续数据
+    if (m_exportCompleted)
+    {
+        return;
+    }
     QByteArray dataTemp=data;
     //qDebug() << "TCP 正常模式导出文件中······"<<" 当前收到的数据大小为 = "<<dataTemp.size();
     QFile receivedFile(tcp_exportFileInfo.localPath);
@@ -251,71 +254,85 @@ void TCPThread::processFileData(const QByteArray& data)
         qWarning() << "Failed to write data to file:" << receivedFile.fileName();
         return;
     }
-
+    if (m_abortFlag) // 中止标志检查
+    {
+        qDebug() << "导出已中止";
+        return;
+    }
     // 新增进度计算
      m_receivedBytes += data.size();
      int progress = static_cast<int>((m_receivedBytes * 100) / m_totalBytes);
-     emit sign_exportProgress(progress);  // 新增信号
-
-     if (progress >= 100) {
-         emit sign_exportFinished();  // 导出完成信号
+     // 进度未到100时发送进度信号
+     if (progress < 100) {
+         emit sign_exportProgress(progress);
+     }
+     // 当进度达到或超过100时，重置计数并发送完成信号
+     else {
+         m_receivedBytes = 0;
+         m_exportCompleted = true;
+         emit sign_exportFinished();
      }
 
     receivedFile.close();
 }
 
-void TCPThread::processFileDataMVPP(const QByteArray &data)
-{
-    //qDebug()<<"TCP正在使用MVPP模式导出数据·······"<<"数据的大小为 = "<<data.size();
-    static QByteArray tempData;
-    tempData.append(data);
+//void TCPThread::processFileDataMVPP(const QByteArray &data)
+//{
+//    //qDebug()<<"TCP正在使用MVPP模式导出数据·······"<<"数据的大小为 = "<<data.size();
+//    static QByteArray tempData;
+//    tempData.append(data);
 
-    if(tempData.size()%2!=0)    //奇数
-    {
-        return;
-    }
-    else
-    {
-        QVector<float> mvppVector;
-        static float factor = NOXISHU;
-        for (int i = 0; i < tempData.size(); i+=2)
-        {
-            float tmp = static_cast<float>(static_cast<int16_t>((tempData.at(i) & 0xff) | (tempData.at(i+1) << 8))*factor);
-            mvppVector.append(tmp);
-        }
+//    if(tempData.size()%2!=0)    //奇数
+//    {
+//        return;
+//    }
+//    else
+//    {
+//        QVector<float> mvppVector;
+//        static float factor = NOXISHU;
+//        for (int i = 0; i < tempData.size(); i+=2)
+//        {
+//            float tmp = static_cast<float>(static_cast<int16_t>((tempData.at(i) & 0xff) | (tempData.at(i+1) << 8))*factor);
+//            mvppVector.append(tmp);
+//        }
 
-        QByteArray writeArray;
-        int datasize = mvppVector.size() * sizeof(float);
-        writeArray.resize(datasize);
-        memcpy(writeArray.data(), mvppVector.constData(), datasize);
+//        QByteArray writeArray;
+//        int datasize = mvppVector.size() * sizeof(float);
+//        writeArray.resize(datasize);
+//        memcpy(writeArray.data(), mvppVector.constData(), datasize);
 
-        // 写入文件
-        QFile receivedFile(tcp_exportFileInfo.localPath);
-        if (!receivedFile.open(QIODevice::WriteOnly | QIODevice::Append)) {
-            qWarning() << "mvpp module Failed to open file for writing:" << receivedFile.fileName();
-            return;
-        }
-        qint64 bytesWritten = receivedFile.write(writeArray.constData(), writeArray.size());
-        if (bytesWritten == -1)
-        {
-            qWarning() << "Failed to write TCP commom module data to file:" << receivedFile.fileName();
-            return;
-        }
-        mvppVector.clear();     //每次填充完后清空一下数组
-        receivedFile.close();
-        tempData.clear();
-    }
-}
+//        // 写入文件
+//        QFile receivedFile(tcp_exportFileInfo.localPath);
+//        if (!receivedFile.open(QIODevice::WriteOnly | QIODevice::Append)) {
+//            qWarning() << "mvpp module Failed to open file for writing:" << receivedFile.fileName();
+//            return;
+//        }
+//        qint64 bytesWritten = receivedFile.write(writeArray.constData(), writeArray.size());
+//        if (bytesWritten == -1)
+//        {
+//            qWarning() << "Failed to write TCP commom module data to file:" << receivedFile.fileName();
+//            return;
+//        }
+//        mvppVector.clear();     //每次填充完后清空一下数组
+//        receivedFile.close();
+//        tempData.clear();
+//    }
+//}
 
 void TCPThread::abortExport()
 {
-//    m_abortFlag = true;
-    if (m_tcpsocket)
+    // 只有在实际导出过程中才执行中止操作
+    if (!m_exportCompleted && m_receivedBytes > 0 && m_receivedBytes < m_totalBytes)
     {
-        m_tcpsocket->abort(); // 中止当前连接
+        m_abortFlag = true;
+        m_exportCompleted = true;  // 设置完成标志，防止后续数据处理
+        if (m_tcpsocket)
+        {
+            m_tcpsocket->abort(); // 中止当前连接
+        }
+        m_receivedBytes = 0;
+        tcp_exportFileInfo.isReceivingFileInfo = false;
     }
-    m_receivedBytes = 0;
-    tcp_exportFileInfo.isReceivingFileInfo = false;
 }
 
 

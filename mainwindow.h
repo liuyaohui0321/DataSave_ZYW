@@ -10,6 +10,7 @@
 #include <QTcpServer>
 #include <qlineedit.h>
 #include <QProgressDialog>
+#include <QRegularExpression>
 
 #include "src/contextmenu.h"
 #include "src/helper/protocol_disk.h"
@@ -53,6 +54,9 @@ public:
     //状态栏设置
     void statebarInit();
 
+    QString extractNumbers(const QString &input);
+    quint64 calculateSize(const QString &input);
+    quint64 countSize(QModelIndexList &indexlist);
 
     inline QString getNowTime()
     {
@@ -105,7 +109,6 @@ public slots:
     void onStopExport();
 
 private slots:
-
     void slot_onItemSelected();     //点击任意节点获取信息
     void slot_showSpeed(uint data);     //速度的应答
     void slot_udpInfo();        //udp连接配置
@@ -175,6 +178,7 @@ private:
         UNUSE,REFRESH,ADDFOLDER,ADDFILE,DELETE,RENAME,MOVE,COPY,EXPORT,DISK_FORMAT,DISK_AGAINMOUNT,DISK_UNMOUNT,STOPAcquisition,Acquisition,PLAYBACK,stopPLAYBACK
     };
     int lastOrderType = 0;
+    quint64 export_cap=0;
 private:
     DlgPlayBackData* dlg;               // 添加指向回放对话框的指针   LYH 2.14
     dlg_acquisition* dlg1;              // 添加指向采集对话框的指针   LYH 2.14

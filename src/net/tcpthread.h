@@ -41,6 +41,8 @@ public:
     Cmd_Catalog_Info parseCatalogInfo(QByteArray &data);
 
 //    double p,hz;
+    bool m_abortFlag = false; // 新增中止标志
+    bool m_exportCompleted = false;  // 新增导出完成标志位
 
 public slots:
     void slot_getCmd(const QByteArray &cmd);
@@ -48,7 +50,7 @@ public slots:
     void slot_getExportCap(const uint64_t &len);
 //    void slot_addTcpHead(const QString &path,double p,double hz);
 
-public:
+//public:
     void abortExport();
 
 signals:

@@ -208,6 +208,70 @@ void MainWindow::statebarInit() {
     ui->statusbar->addWidget(pbtn_stateBarRefresh);
 }
 
+// 定义一个函数来提取字符串中的数字部分
+QString MainWindow::extractNumbers(const QString &input)
+{
+    QRegularExpression re("\\d+"); // 匹配一个或多个数字
+    QRegularExpressionMatchIterator i = re.globalMatch(input);
+    QString result;
+
+    while (i.hasNext()) {
+        QRegularExpressionMatch match = i.next();
+        result += match.captured(0); // 将匹配到的数字添加到结果中
+    }
+
+    return result;
+}
+
+// 定义一个函数来计算单个字符串对应的数值
+quint64 MainWindow::calculateSize(const QString &input)
+{
+    QRegularExpression re("(\\d+)\\s*(MB|GB|Byte)",QRegularExpression::CaseInsensitiveOption);
+    QRegularExpressionMatch match = re.match(input);
+
+    if (match.hasMatch()) {
+        bool ok;
+        quint64 number = match.captured(1).toULongLong(&ok);
+        // 打印匹配到的数字和单位
+//        qDebug() << "Matched number:" << number;
+//        qDebug() << "Matched unit:" << match.captured(2);
+        if (ok) {
+            QString unit = match.captured(2).toUpper();
+            if (unit == "MB") {
+                return number * 0x100000ULL; // 1MB = 1048576 Byte
+            } else if (unit == "GB") {
+                return number * 0x40000000ULL; // 1GB = 1073741824 Byte
+            } else if (unit == "BYTE") {
+                return number;
+            }
+        }
+        else {
+                qDebug() << "No match found for input:" << input;
+        }
+    }
+
+    return 0;
+}
+
+quint64 MainWindow::countSize(QModelIndexList &indexlist)
+{
+    quint64 totalSize = 0;
+    foreach (const QModelIndex &index, indexlist)
+    {
+        if (index.column() == 2)
+        {
+            // 获取该索引对应的数据（假设是显示的文本）
+            QString text = index.data(Qt::DisplayRole).toString();
+//            QString numbers = extractNumbers(text); // 提取数字部分
+            quint64 size = calculateSize(text); // 计算单个字符串对应的数值
+            totalSize += size; // 累加到总大小
+//            qDebug() <<"size"<<size;
+        }
+
+    }
+    return totalSize;
+}
+
 
 void MainWindow::init()
 {
@@ -1559,6 +1623,7 @@ void MainWindow::slotExport() //导出
             }
             int type = dlg4->getExportType();        //获取是千兆还是万兆网
             exportFile(static_cast<NetworkPortType>(type));     //只是下发导出命令
+            emit sign_sendExportCap(m_ExportFileInfo.size);
             if(NetworkPortType::GigabitEthernet == static_cast<NetworkPortType>(type))
             {
                 //qDebug()<<"使用千兆网来接收数据";
@@ -1699,7 +1764,6 @@ void MainWindow::exportFile(const NetworkPortType &type,uint32_t percent,uint32_
     //记录操作类型
     lastOrderType = TYPE::EXPORT;
     emit sign_sendCmd(sendData);
-    emit sign_sendExportCap(m_ExportFileInfo.size);
 }
 
 void MainWindow::PercentExport()
@@ -1735,7 +1799,17 @@ void MainWindow::PercentExport()
             auto type = dlg5->getExportType();  //获取是千兆还是万兆网
             auto percent = dlg5->getExportPercent();
             auto cap = dlg5->getExportCap();
+            if((percent>100)||(percent<=0))   percent=100;
+            if(cap<=0)
+                export_cap=static_cast<quint64>(m_ExportFileInfo.size*percent/100);
+            else
+            {
+                 if(cap>(m_ExportFileInfo.size/0x100000)) cap=m_ExportFileInfo.size/0x100000;
+//                qDebug()<<"cap:"<<cap;
+                 export_cap=static_cast<quint64>(cap*percent/100*0x100000);
+            }
             exportFile(static_cast<NetworkPortType>(type),percent,cap);
+            emit sign_sendExportCap(export_cap);
             if(NetworkPortType::GigabitEthernet == static_cast<NetworkPortType>(type))
             {
                 //qDebug()<<"使用千兆网来接收数据";
@@ -1809,11 +1883,15 @@ void MainWindow::MoreFileExport()
                     selectedTexts << path;
                     num++;
                 }
+
             }
             // 使用selectedTexts进行后续操作
             // qDebug() << "选中的项：" << selectedTexts;
             qDebug() << "num：" << num;
             exportMoreFile(static_cast<NetworkPortType>(type),&selectedTexts,num);
+            //计算批量导出文件的总大小
+            quint64 totalSize = countSize(selectedIndexes);
+            emit sign_sendExportCap(totalSize);
             if(NetworkPortType::GigabitEthernet == static_cast<NetworkPortType>(type))
             {
                 //qDebug()<<"使用千兆网来接收数据";
@@ -2553,7 +2631,7 @@ void MainWindow::onExportProgress(int percent)
         // 设置最大尺寸（如果需要限制最大尺寸）
         progressDialog->setMaximumSize(800, 300);
         progressDialog->setWindowTitle(tr("导出进度"));
-        progressDialog->setCancelButtonText(tr("停止导出")); // 取消按钮文本
+        progressDialog->setCancelButtonText(tr("停止导出")); // 修改取消按钮文本
 //        progressDialog->setCancelButton(nullptr); // 禁用取消按钮
         progressDialog->setMinimumDuration(0);    // 立即显示
         //如果使用非模态窗口，则注释掉下面语句
@@ -2561,14 +2639,19 @@ void MainWindow::onExportProgress(int percent)
         // 连接取消按钮点击信号
         connect(progressDialog, &QProgressDialog::canceled, this, &MainWindow::onStopExport);
     }
-    progressDialog->setValue(percent);
-    progressDialog->show();
+    // 只在进度小于100时更新进度条
+    if (percent < 100) {
+        progressDialog->setValue(percent);
+        progressDialog->show();
+    }
 }
 
 void MainWindow::onExportFinished()
 {
     if (progressDialog)
     {
+        // 在关闭对话框前断开信号连接
+        disconnect(progressDialog, &QProgressDialog::canceled, this, &MainWindow::onStopExport);
         progressDialog->close();
         delete progressDialog;
         progressDialog = nullptr;
@@ -2578,12 +2661,21 @@ void MainWindow::onExportFinished()
 
 void MainWindow::onStopExport()
 {
-    if (m_tcp)
+    // 只有在导出过程中才处理中止操作
+    if (progressDialog && progressDialog->value() < 100)
     {
-        m_tcp->abortExport(); // 调用TCPThread的中止方法
+        if (m_tcp)
+        {
+             m_tcp->abortExport(); // 调用TCPThread的中止方法
+        }
+        // 关闭进度对话框
+        progressDialog->close();
+        delete progressDialog;
+        progressDialog = nullptr;
+        QMessageBox::information(this, tr("提示"), tr("导出已中止"));
     }
-    QMessageBox::information(this, tr("提示"), tr("导出已中止"));
 }
+
 
 QString MainWindow::buildPath(QModelIndex index) {
     // 获取当前节点的第一列的值
