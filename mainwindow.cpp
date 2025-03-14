@@ -1727,6 +1727,27 @@ void MainWindow::slotExport() //导出
         qDebug() << "对话框被取消或关闭";
     });
 }
+
+void MainWindow::stopExport()
+{
+    //下发内容
+    Cmd_Export_File_Func_Info cmd_stop_exportinfo;
+    cmd_stop_exportinfo.order_head = ORDERHEAD;
+    cmd_stop_exportinfo.head = DSV_PACKET_HEADER;
+    cmd_stop_exportinfo.source_ID = 0;
+    cmd_stop_exportinfo.dest_ID = 0;
+    cmd_stop_exportinfo.oper_type = 0xD2;
+    cmd_stop_exportinfo.oper_ID = 0x0A;
+    cmd_stop_exportinfo.package_num = 0;
+    cmd_stop_exportinfo.check = 0;
+    cmd_stop_exportinfo.end = DSV_PACKET_TAIL;
+    QByteArray sendData = QByteArray((char *) (&cmd_stop_exportinfo), sizeof(Cmd_Export_File_Func_Info));
+    QString log = QString("%1:正在执行停止导出文件操作.").arg(getNowTime());
+    ui->textBrowser_log->append(log);
+    //记录操作类型
+    lastOrderType = TYPE::STOP_EXPORT;
+    emit sign_sendCmd(sendData);
+}
 //void MainWindow::slotExport() //导出
 //{
 //    //qDebug()<<"--------------------------导出数据槽函数-----------------------------------";
@@ -2700,6 +2721,9 @@ void MainWindow::onExportProgress(int percent)
         progressDialog->setMinimumDuration(0);    // 立即显示
         //如果使用非模态窗口，则注释掉下面语句
         progressDialog->setModal(true); // 强制模态
+        // 移除关闭按钮（需保留其他标志，避免影响窗口行为）
+        progressDialog->setWindowFlags(progressDialog->windowFlags() & ~Qt::WindowCloseButtonHint);
+
         // 连接取消按钮点击信号
         connect(progressDialog, &QProgressDialog::canceled, this, &MainWindow::onStopExport);
     }
@@ -2728,6 +2752,7 @@ void MainWindow::onStopExport()
     // 只有在导出过程中才处理中止操作
     if (progressDialog && progressDialog->value() < 100)
     {
+        stopExport();
         if (m_tcp)
         {
              m_tcp->abortExport(); // 调用TCPThread的中止方法

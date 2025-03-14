@@ -129,6 +129,7 @@ private slots:
     void slotStopWrite(); //停止写入    --
     void slotPlayBack(); //回放   --
     void slotExport(); //导出
+    void stopExport(); //停止导出
     void slotAcquisition(); //采集    --
 
     void showMenu();
@@ -176,7 +177,7 @@ private:
 
 
     enum TYPE{
-        UNUSE,REFRESH,ADDFOLDER,ADDFILE,DELETE,RENAME,MOVE,COPY,EXPORT,DISK_FORMAT,DISK_AGAINMOUNT,DISK_UNMOUNT,STOPAcquisition,Acquisition,PLAYBACK,stopPLAYBACK
+        UNUSE,REFRESH,ADDFOLDER,ADDFILE,DELETE,RENAME,MOVE,COPY,EXPORT,STOP_EXPORT,DISK_FORMAT,DISK_AGAINMOUNT,DISK_UNMOUNT,STOPAcquisition,Acquisition,PLAYBACK,stopPLAYBACK
     };
     int lastOrderType = 0;
     quint64 export_cap=0;
