@@ -228,6 +228,11 @@ void TCPThread::processCompletePacket(QByteArray &data)
         //qDebug()<<"获取到的速度为 = "<<speed;
         emit sign_speed(speed);
     }
+    if(head == HEAD && end == END && oper_type == 0xB5 && oper_ID == 0x11)
+    {
+//        qDebug() << "获取回放结束的应答包."<<data.toHex();
+        emit stopplayback();
+    }
 }
 
 

@@ -30,7 +30,7 @@
 #include "src/dialog/dlg_export_data.h"
 #include "src/dialog/dlg_percent_export_data.h"
 #include "src/dialog/dlg_export_morefile_data.h"
-
+#include "src/playbackdialog.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -107,6 +107,7 @@ public slots:
     void onExportProgress(int percent);
     void onExportFinished();
     void onStopExport();
+    void PlayBackWaitfinished();
 
 private slots:
     void slot_onItemSelected();     //点击任意节点获取信息
@@ -189,6 +190,7 @@ private:
     dlg_export_moreFile_data *dlg6;     // 添加指向批量导出数据对话框的指针   LYH 2.24
     QStandardItemModel *Model;
     QProgressDialog* progressDialog = nullptr; // 导出进度对话框
+    playbackDialog *playbackdialog = nullptr;
 };
 
 class IPDialog : public QDialog
@@ -208,6 +210,7 @@ private:
     QLineEdit *ipLineEdit;
     bool validateIPAddress(const QString &ip);
 };
+
 
 
 #endif // MAINWINDOW_H

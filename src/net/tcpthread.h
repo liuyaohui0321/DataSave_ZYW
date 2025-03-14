@@ -74,6 +74,7 @@ signals:
     void sign_speed(uint data);     //获取存盘速度
     void sign_exportProgress(int percent);
     void sign_exportFinished();
+    void stopplayback(); //停止回放信号
 
 private slots:
     void slot_newConnection();      //建立新的连接

@@ -421,7 +421,7 @@ void MainWindow::slotRefresh()
     //qDebug()<<sendData.toHex();
 
     emit sign_sendCmd(sendData);
-
+    stateShow->setText("空闲");
 }
 
 void MainWindow::slotFolder()
@@ -995,6 +995,7 @@ void MainWindow::MultiFilePlayBack()
         // 使用selectedTexts进行后续操作
         // qDebug() << "选中的项：" << selectedTexts;
          qDebug() << "num：" << num;
+         PlayBackWaitfinished();
         cmd_MorefilePlayBack_info.order_head = ORDERHEAD;
         cmd_MorefilePlayBack_info.head = DSV_PACKET_HEADER;
         cmd_MorefilePlayBack_info.source_ID = 0;
@@ -1080,6 +1081,7 @@ void MainWindow::MultiFilePlayBack()
         //记录操作类型
         lastOrderType = TYPE::PLAYBACK;
         emit sign_sendLenCmd(buffer,totalSize);
+        playbackdialog->exec();
         ui->treeView->setSelectionMode(QAbstractItemView::SingleSelection);
     });
 }
@@ -1527,6 +1529,28 @@ void MainWindow::stopPlayBack()
     //记录操作类型
     lastOrderType = TYPE::stopPLAYBACK;
     emit sign_sendCmd(sendData);
+
+    qDebug()<<"发送停止回放指令，等待窗口关闭";
+    // 使用定时器延迟关闭弹窗
+    if (playbackdialog)
+    {
+       // 更新状态文本
+       QLabel* statusLabel = playbackdialog->findChild<QLabel*>();
+       if (statusLabel)
+       {
+           statusLabel->setText("已发送停止指令，等待设备响应...");
+       }
+
+       // 延迟1秒后关闭弹窗
+       QTimer::singleShot(1000, [this]()
+       {
+           if (playbackdialog)
+           {
+               playbackdialog->accept();
+               playbackdialog = nullptr;
+           }
+       });
+    }
 }
 void MainWindow::slotWrite() //写入
 {
@@ -1562,20 +1586,54 @@ void MainWindow::slotPlayBack() //回放
     dlg->show();
     // 连接对话框的完成信号（使用lambda捕获this指针）
     connect(dlg, &DlgPlayBackData::accepted, this, [=](){
-        if(dlg->getMode() == 1) {
+        if(dlg->getMode() == 1)
+        {
             qDebug() << "点击开始回放";
             auto mode = dlg->getReadMode();
             auto cnt = dlg->getLoopCnt();
             auto channel = dlg->getPlaybackChannel();
+            PlayBackWaitfinished();
+//            // 创建并显示回放对话框
+//            if (playbackdialog)
+//            {
+//                delete playbackdialog;  // 确保不会有多个实例
+//            }
+
+//            playbackdialog = new playbackDialog(this);
+
+//            // 连接信号槽
+//            connect(playbackdialog, &playbackDialog::stopRequested, this, &MainWindow::stopPlayBack);
+//            connect(m_tcp, &TCPThread::stopplayback, playbackdialog, &playbackDialog::onPlaybackStopped);
+
+//            // 处理长时间回放
+//            connect(playbackdialog, &playbackDialog::playbackMaybeHanging, this, [this](int seconds)
+//            {
+//                // 这里使用 Qt::DirectConnection 确保在主线程处理
+//                QMessageBox::information(this, "回放提示",QString("回放已持续 %1 秒，如果时间过长，可以点击停止回放按钮停止。").arg(seconds));
+//            });
+
+//            // 清理资源
+//            connect(playbackdialog, &QDialog::finished, this, [this]()
+//            {
+//                if (playbackdialog)
+//                {
+//                    playbackdialog->deleteLater();
+//                    playbackdialog = nullptr;
+//                }
+//            });
             playBack(static_cast<ReadMode>(mode), static_cast<BackGTH>(channel), cnt);
+            // 显示对话框
+            playbackdialog->exec(); // 使用exec()实现模态
 //            isWaitingResponse = true;
         }
-        else if (dlg->getMode() == 2) {
+        else if (dlg->getMode() == 2)
+        {
             qDebug() << "点击停止回放";
             stopPlayBack();
 //            isWaitingResponse = true;
         }
-        else if (dlg->getMode() == 3){
+        else if (dlg->getMode() == 3)
+        {
             qDebug() << "点击多文件回放";
             dlg->close();
             ui->treeView->setSelectionMode(QAbstractItemView::ExtendedSelection);
@@ -1636,7 +1694,9 @@ void MainWindow::slotExport() //导出
                 {
                     m_tcp->setExportFileInfo(m_ExportFileInfo);
                 }
-            }
+                stateShow->setText("导出中...");
+                stateShow->setStyleSheet("color: green;");
+            }           
             else
             {
                 //qDebug()<<"使用万兆网来接收数据";
@@ -1819,6 +1879,8 @@ void MainWindow::PercentExport()
                 m_ExportFileInfo.isReceivingFileInfo =true;
                 //qDebug()<<"导出数据时的标志位，应该为true = "<<m_ExportFileInfo.isReceivingFileInfo;
                 m_tcp->setExportFileInfo(m_ExportFileInfo);
+                stateShow->setText("导出中...");
+                stateShow->setStyleSheet("color: green;");
             }
             else
             {
@@ -1901,6 +1963,8 @@ void MainWindow::MoreFileExport()
                 m_ExportFileInfo.isReceivingFileInfo =true;
                 //qDebug()<<"导出数据时的标志位，应该为true = "<<m_ExportFileInfo.isReceivingFileInfo;
                 m_tcp->setExportFileInfo(m_ExportFileInfo);
+                stateShow->setText("导出中...");
+                stateShow->setStyleSheet("color: green;");
             }
             else
             {
@@ -2674,6 +2738,38 @@ void MainWindow::onStopExport()
         progressDialog = nullptr;
         QMessageBox::information(this, tr("提示"), tr("导出已中止"));
     }
+}
+
+void MainWindow::PlayBackWaitfinished()
+{
+    // 创建并显示回放对话框
+    if (playbackdialog)
+    {
+        delete playbackdialog;  // 确保不会有多个实例
+    }
+
+    playbackdialog = new playbackDialog(this);
+
+    // 连接信号槽
+    connect(playbackdialog, &playbackDialog::stopRequested, this, &MainWindow::stopPlayBack);
+    connect(m_tcp, &TCPThread::stopplayback, playbackdialog, &playbackDialog::onPlaybackStopped);
+
+    // 处理长时间回放
+    connect(playbackdialog, &playbackDialog::playbackMaybeHanging, this, [this](int seconds)
+    {
+        // 这里使用 Qt::DirectConnection 确保在主线程处理
+        QMessageBox::information(this, "回放提示",QString("回放已持续 %1 秒，如果时间过长，可以点击停止回放按钮停止。").arg(seconds));
+    });
+
+    // 清理资源
+    connect(playbackdialog, &QDialog::finished, this, [this]()
+    {
+        if (playbackdialog)
+        {
+            playbackdialog->deleteLater();
+            playbackdialog = nullptr;
+        }
+    });
 }
 
 
