@@ -1,7 +1,7 @@
 ﻿#include "mainwindow.h"
 #include "ui_mainwindow.h"
-
 #include <QDebug>
+#include <QSettings>
 
 #pragma execution_character_set("utf-8")
 
@@ -75,6 +75,65 @@ void MainWindow::menubarInit()
         "font-size: 14pt; "
         "font-weight: bold;"
         );
+    auto strip1 =  readConfig(QString("ip1"),
+                                                  "BaseConfig",
+                                    QCoreApplication::applicationDirPath()+"/data_save_card.ini");
+
+    auto strip2 =  readConfig(QString("ip2"),
+                                                 "BaseConfig",
+                                                 QCoreApplication::applicationDirPath()+"/data_save_card.ini");
+    m_netComboBox = new QComboBox(this);
+    m_netComboBox->addItem(strip1);
+    m_netComboBox->addItem(strip2);
+    m_clientBtn = new QPushButton("连接",this);
+
+    connect(m_clientBtn,&QPushButton::clicked,[this]()
+    {
+        // 调用TCPThread的槽关闭连接
+         m_tcp->closeConnection();
+    });
+    // 处理关闭结果
+    connect(m_tcp, &TCPThread::connectionClosed, this, [this](QString ip, quint16 port, QAbstractSocket::SocketState state)
+    {
+        if (m_netComboBox->currentText() == ip) return;
+
+        QString temp;
+        if (state == QAbstractSocket::UnconnectedState)
+        {
+            temp = QString("%1: [%2:%3] 客户端断开连接。").arg(getNowTime()).arg(ip).arg(port);
+        }
+        else
+        {
+            qDebug() << "断开连接失败！";
+            temp = QString("%1: [%2:%3] 客户端断开连接失败。").arg(getNowTime()).arg(ip).arg(port);
+        }
+        ui->textBrowser_log->append(temp);
+    });
+
+//    connect(m_clientBtn,&QPushButton::clicked,[this]()
+//    {
+
+//            QString ip=m_socket->peerAddress().toString();//获取连接的 ip地址
+//            if(m_netComboBox->currentText()==ip){
+//                return ;
+//            }
+
+//            quint16 port=m_socket->peerPort();//获取连接的 端口号
+//            //m_semaphore->release();
+//            m_socket->close();
+
+//            if (m_socket->state() == QAbstractSocket::UnconnectedState)
+//            {
+//                QString temp=QString("%1: [%2:%3] 客服端断开连接。").arg(getNowTime()).arg(ip).arg(port);
+//                ui->textBrowser_log->append(temp);
+//            }
+//            else
+//            {
+//                qDebug()<<"断开连接失败！";
+//                QString temp=QString("%1: [%2:%3] 客服端断开连接失败。").arg(getNowTime()).arg(ip).arg(port);
+//                ui->textBrowser_log->append(temp);
+//            }
+//    });
 
     m_udpLabel = new QLabel("等待万兆网连接",this);
     m_udpLabel->setFixedSize(180,32);
@@ -86,6 +145,9 @@ void MainWindow::menubarInit()
         "font-weight: bold;"
         );
 
+    hbox->addWidget(m_netComboBox);
+    hbox->addWidget(m_clientBtn);
+
     hbox->addWidget(m_pSocklLabel);
     hbox->addSpacing(50);
     hbox->addWidget(m_udpLabel);
@@ -93,7 +155,6 @@ void MainWindow::menubarInit()
 
     // 将包含 QLabel 的 QWidget 添加到 QMenuBar
     ui->menubar->setCornerWidget(rightWidget, Qt::TopRightCorner);
-
 }
 
 
@@ -2822,6 +2883,24 @@ QString MainWindow::buildPath(QModelIndex index) {
     }
 
     return path;
+}
+
+QString MainWindow::readConfig(const QString &key, QString group, const QString &path)
+{
+    QString user_value = QString("");
+    if (key.isEmpty())
+    {
+        return user_value;
+    }
+    else
+    {
+        // 创建配置文件操作对象，使用智能指针管理
+        QSettings pConfig(path, QSettings::IniFormat);
+        // 读取用户配置信息
+        QString user_value = pConfig.value(QString(group) + "/" + key).toString();
+
+        return user_value;
+    }
 }
 
 void MainWindow::slot_onItemSelected()

@@ -49,6 +49,17 @@ public slots:
     void slot_getLenCmd(const QByteArray &cmd,const int &len);
     void slot_getExportCap(const uint64_t &len);
 //    void slot_addTcpHead(const QString &path,double p,double hz);
+    void closeConnection()
+    {
+        if (m_tcpsocket && m_tcpsocket->state() == QAbstractSocket::ConnectedState)
+        {
+            QString ip = m_tcpsocket->peerAddress().toString();
+            quint16 port = m_tcpsocket->peerPort();
+            m_tcpsocket->disconnectFromHost();
+            // 可等待断开或处理异步结果
+            emit connectionClosed(ip, port, m_tcpsocket->state());
+        }
+    }
 
 //public:
     void abortExport();
@@ -59,6 +70,7 @@ signals:
     void sign_getNewConnect(const QString &client); //获取到了新的连接
     void sign_tcpNotConnect();  //提示当前连接未建立
     void sign_tellMainDisconnect();     //提示当前连接已经断开
+    void connectionClosed(const QString &ip, quint16 port, QAbstractSocket::SocketState state);
 
     //解析出来的内容
     void sign_diskData(const Cmd_Disk_State_Info &data);
