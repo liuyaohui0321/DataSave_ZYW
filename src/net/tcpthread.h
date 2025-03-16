@@ -74,6 +74,7 @@ signals:
     void sign_speed(uint data);     //获取存盘速度
     void sign_exportProgress(int percent);
     void sign_exportFinished();
+//    void sign_SetexportProgress(int percent);
     void stopplayback(); //停止回放信号
 
 private slots:
@@ -95,8 +96,10 @@ private:
     ExportFileInfo tcp_exportFileInfo;//导出文件信息
 
     QTimer *m_timer;
+    QTimer *m_stallTimer;
     quint64 m_receivedBytes = 0;
     quint64 m_totalBytes = 0;
+    int m_lastProgress = 0;
 };
 
 #endif // TCPTHREAD_H
