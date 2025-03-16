@@ -110,6 +110,7 @@ public slots:
 //    void onExportFinished();
 //    void onStopExport();
     void PlayBackWaitfinished();
+    void slot_exportFinished1();
 
 private slots:
     void slot_onItemSelected();     //点击任意节点获取信息

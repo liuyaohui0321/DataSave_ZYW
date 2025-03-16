@@ -406,7 +406,7 @@ void MainWindow::init()
 
 //    connect(this,&MainWindow::sign_addTcpFileHead,m_tcp,&TCPThread::slot_addTcpHead);
     connect(m_tcp,&TCPThread::sign_speed,this,&MainWindow::slot_showSpeed);
-
+connect(m_tcp, &TCPThread::sign_exportFinished1, this, &MainWindow::slot_exportFinished1);
     m_udpInfoWidget = new udpWidget(this);
     m_udpInfoWidget->hide();
 
@@ -2858,6 +2858,18 @@ void MainWindow::PlayBackWaitfinished()
             playbackdialog = nullptr;
         }
     });
+}
+
+void MainWindow::slot_exportFinished1()
+{
+    QMessageBox::information(this, tr("导出完成"), tr("文件导出成功完成！"));
+
+    // 可选：更新状态显示
+    stateShow->setText("导出完成");
+    stateShow->setStyleSheet("color: blue;");
+
+    QString log = QString("%1: 文件导出完成").arg(getNowTime());
+    ui->textBrowser_log->append(log);
 }
 
 

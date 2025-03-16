@@ -69,7 +69,7 @@ signals:
     void sign_tcpNotConnect();  //提示当前连接未建立
     void sign_tellMainDisconnect();     //提示当前连接已经断开
     void connectionClosed(const QString &ip, quint16 port, QAbstractSocket::SocketState state);
-
+    void sign_exportFinished1();
     //解析出来的内容
     void sign_diskData(const Cmd_Disk_State_Info &data);
     //void sign_commonData(const Cmd_Response_Common_Info *data);
