@@ -21,20 +21,6 @@ TCPThread::TCPThread(QObject *parent)
         tcp_exportFileInfo.isReceivingFileInfo = false;
         m_timer->stop();
     });
-
-    m_stallTimer = new QTimer(this);
-    connect(m_stallTimer, &QTimer::timeout, this, [this]()
-    {
-        if (!m_exportCompleted)
-        {
-//            qWarning() << "检测到进度停滞，强制完成导出";
-            m_receivedBytes = 0;
-            m_exportCompleted = true;
-//            emit sign_SetexportProgress(100);  // 立即更新进度
-            emit sign_exportFinished();
-            m_stallTimer->stop();
-        }
-    });
 }
 
 void TCPThread::slot_getCmd(const QByteArray &cmd)
@@ -84,15 +70,6 @@ void TCPThread::slot_getLenCmd(const QByteArray &cmd,const int &len)
         }
     }
 
-}
-
-void TCPThread::slot_getExportCap(const quint64 &len)
-{
-    m_totalBytes=len;
-    m_receivedBytes=0;
-    m_abortFlag = false;
-    m_exportCompleted = false;
-    qDebug() << "m_totalBytes:" << m_totalBytes;
 }
 
 //void TCPThread::slot_addTcpHead(const QString &path,double p, double hz)
@@ -252,11 +229,6 @@ void TCPThread::processCompletePacket(QByteArray &data)
 
 void TCPThread::processFileData(const QByteArray& data)
 {
-    // 如果已经完成导出，忽略后续数据
-    if (m_exportCompleted)
-    {
-        return;
-    }
     QByteArray dataTemp=data;
     //qDebug() << "TCP 正常模式导出文件中······"<<" 当前收到的数据大小为 = "<<dataTemp.size();
     QFile receivedFile(tcp_exportFileInfo.localPath);
@@ -276,49 +248,6 @@ void TCPThread::processFileData(const QByteArray& data)
         qDebug() << "导出已中止";
         return;
     }
-//    // 新增进度计算
-//     m_receivedBytes += data.size();
-//     int progress = static_cast<int>((m_receivedBytes * 100) / m_totalBytes);
-//     // 进度未到100时发送进度信号
-//     if (progress < 100) {
-//         emit sign_exportProgress(progress);
-//     }
-//     // 当进度达到或超过100时，重置计数并发送完成信号
-//     else {
-//         m_receivedBytes = 0;
-//         m_exportCompleted = true;
-//         emit sign_exportFinished();
-//     }
-    m_receivedBytes += data.size();
-    int progress = static_cast<int>((m_receivedBytes * 100) / m_totalBytes);
-    // 检测进度停滞
-    if (progress >= 97 && progress <= 99)
-    {
-        if (progress != m_lastProgress)
-        {
-            m_lastProgress = progress;
-            m_stallTimer->start(8000); // 8秒超时检测
-        }
-    }
-    else
-    {
-        m_stallTimer->stop();
-    }
-
-    // 进度未到100时发送进度信号
-     if (progress < 100)
-     {
-         emit sign_exportProgress(progress);
-     }
-     // 当进度达到或超过100时，重置计数并发送完成信号
-     else
-     {
-        m_stallTimer->stop();
-        m_receivedBytes = 0;
-        m_exportCompleted = true;
-        emit sign_exportFinished();
-     }
-
      receivedFile.close();
 }
 
@@ -368,18 +297,12 @@ void TCPThread::processFileData(const QByteArray& data)
 void TCPThread::abortExport()
 {
     // 只有在实际导出过程中才执行中止操作
-    if (!m_exportCompleted && m_receivedBytes > 0 && m_receivedBytes < m_totalBytes)
-    {
         m_abortFlag = true;
-        m_exportCompleted = true;  // 设置完成标志，防止后续数据处理
         if (m_tcpsocket)
         {
             m_tcpsocket->abort(); // 中止当前连接
         }
-        m_receivedBytes = 0;
         tcp_exportFileInfo.isReceivingFileInfo = false;
-        m_stallTimer->stop(); // 中止时需要停止计时器
-    }
 }
 
 

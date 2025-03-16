@@ -42,12 +42,10 @@ public:
 
 //    double p,hz;
     bool m_abortFlag = false; // 新增中止标志
-    bool m_exportCompleted = false;  // 新增导出完成标志位
 
 public slots:
     void slot_getCmd(const QByteArray &cmd);
     void slot_getLenCmd(const QByteArray &cmd,const int &len);
-    void slot_getExportCap(const uint64_t &len);
 //    void slot_addTcpHead(const QString &path,double p,double hz);
     void closeConnection()
     {
@@ -84,8 +82,6 @@ signals:
     //发送目录树信息
     void sign_sendDirectoryParser(QStandardItemModel *data);
     void sign_speed(uint data);     //获取存盘速度
-    void sign_exportProgress(int percent);
-    void sign_exportFinished();
 //    void sign_SetexportProgress(int percent);
     void stopplayback(); //停止回放信号
 
@@ -108,10 +104,6 @@ private:
     ExportFileInfo tcp_exportFileInfo;//导出文件信息
 
     QTimer *m_timer;
-    QTimer *m_stallTimer;
-    quint64 m_receivedBytes = 0;
-    quint64 m_totalBytes = 0;
-    int m_lastProgress = 0;
 };
 
 #endif // TCPTHREAD_H

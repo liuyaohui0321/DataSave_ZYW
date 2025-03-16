@@ -377,7 +377,6 @@ void MainWindow::init()
     connect(m_tcp,&TCPThread::sign_getNewConnect,this,&MainWindow::slot_haveNewConnection);
     connect(this,&MainWindow::sign_sendCmd,m_tcp,&TCPThread::slot_getCmd);
     connect(this,&MainWindow::sign_sendLenCmd,m_tcp,&TCPThread::slot_getLenCmd);
-    connect(this,&MainWindow::sign_sendExportCap,m_tcp,&TCPThread::slot_getExportCap);
     connect(m_tcp,&TCPThread::sign_tcpNotConnect,this,[=](){
         QString log = QString("%1: 传输连接并未建立，请等待连接建立完成后，再进行操作！！！").arg(getNowTime());
         ui->textBrowser_log->append(log);
@@ -403,8 +402,6 @@ void MainWindow::init()
     //connect(m_tcp,&TCPThread::sign_commonData,this,&MainWindow::slot_recvCommonRespon);
     connect(m_tcp,&TCPThread::sign_newCommonData,this,&MainWindow::slot_newrecvCommonRespon);
 
-    connect(m_tcp, &TCPThread::sign_exportProgress, this, &MainWindow::onExportProgress);
-    connect(m_tcp, &TCPThread::sign_exportFinished, this, &MainWindow::onExportFinished);
 //    connect(m_tcp, &TCPThread::sign_SetexportProgress, this, &MainWindow::SetExportProgress);
 
 //    connect(this,&MainWindow::sign_addTcpFileHead,m_tcp,&TCPThread::slot_addTcpHead);
@@ -1745,7 +1742,6 @@ void MainWindow::slotExport() //导出
 //            emit sign_sendExportCap(m_ExportFileInfo.size);//3.15 by lyh
             if(NetworkPortType::GigabitEthernet == static_cast<NetworkPortType>(type))
             {
-                emit sign_sendExportCap(m_ExportFileInfo.size);
                 //qDebug()<<"使用千兆网来接收数据";
                 QString log = QString("%1: 正在使用千兆网导出数据中...").arg(getNowTime());
                 ui->textBrowser_log->append(log);
@@ -1760,8 +1756,7 @@ void MainWindow::slotExport() //导出
                 stateShow->setStyleSheet("color: green;");
             }           
             else
-            {
-                emit sign_send10GExportCap(m_ExportFileInfo.size);
+            { 
                 //qDebug()<<"使用万兆网来接收数据";
                 QString log = QString("%1: 正在使用万兆网导出数据中...").arg(getNowTime());
                 ui->textBrowser_log->append(log);
@@ -1955,7 +1950,6 @@ void MainWindow::PercentExport()
                  export_cap=static_cast<quint64>(cap*percent/100*0x100000);
             }
             exportFile(static_cast<NetworkPortType>(type),percent,cap);
-            emit sign_sendExportCap(export_cap);
             if(NetworkPortType::GigabitEthernet == static_cast<NetworkPortType>(type))
             {
                 //qDebug()<<"使用千兆网来接收数据";
@@ -2036,10 +2030,7 @@ void MainWindow::MoreFileExport()
             // 使用selectedTexts进行后续操作
             // qDebug() << "选中的项：" << selectedTexts;
             qDebug() << "num：" << num;
-            exportMoreFile(static_cast<NetworkPortType>(type),&selectedTexts,num);
-            //计算批量导出文件的总大小
-            quint64 totalSize = countSize(selectedIndexes);
-            emit sign_sendExportCap(totalSize);
+            exportMoreFile(static_cast<NetworkPortType>(type),&selectedTexts,num);   
             if(NetworkPortType::GigabitEthernet == static_cast<NetworkPortType>(type))
             {
                 //qDebug()<<"使用千兆网来接收数据";
@@ -2769,35 +2760,35 @@ void MainWindow::slot_newrecvCommonRespon(const quint32 &type,const quint32 &id,
     }
 }
 
-void MainWindow::onExportProgress(int percent)
-{
-    if (!progressDialog)
-    {
-        progressDialog = new QProgressDialog(this);
-        //设置尺寸策略
-        progressDialog->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-        // 设置最小尺寸
-        progressDialog->setMinimumSize(400, 150);
-        // 设置最大尺寸（如果需要限制最大尺寸）
-        progressDialog->setMaximumSize(800, 300);
-        progressDialog->setWindowTitle(tr("导出进度"));
-        progressDialog->setCancelButtonText(tr("停止导出")); // 修改取消按钮文本
-//        progressDialog->setCancelButton(nullptr); // 禁用取消按钮
-        progressDialog->setMinimumDuration(0);    // 立即显示
-        //如果使用非模态窗口，则注释掉下面语句
-        progressDialog->setModal(true); // 强制模态
-        // 移除关闭按钮（需保留其他标志，避免影响窗口行为）
-        progressDialog->setWindowFlags(progressDialog->windowFlags() & ~Qt::WindowCloseButtonHint);
+//void MainWindow::onExportProgress(int percent)
+//{
+//    if (!progressDialog)
+//    {
+//        progressDialog = new QProgressDialog(this);
+//        //设置尺寸策略
+//        progressDialog->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+//        // 设置最小尺寸
+//        progressDialog->setMinimumSize(400, 150);
+//        // 设置最大尺寸（如果需要限制最大尺寸）
+//        progressDialog->setMaximumSize(800, 300);
+//        progressDialog->setWindowTitle(tr("导出进度"));
+//        progressDialog->setCancelButtonText(tr("停止导出")); // 修改取消按钮文本
+////        progressDialog->setCancelButton(nullptr); // 禁用取消按钮
+//        progressDialog->setMinimumDuration(0);    // 立即显示
+//        //如果使用非模态窗口，则注释掉下面语句
+//        progressDialog->setModal(true); // 强制模态
+//        // 移除关闭按钮（需保留其他标志，避免影响窗口行为）
+//        progressDialog->setWindowFlags(progressDialog->windowFlags() & ~Qt::WindowCloseButtonHint);
 
-        // 连接取消按钮点击信号
-        connect(progressDialog, &QProgressDialog::canceled, this, &MainWindow::onStopExport);
-    }
-    // 只在进度小于100时更新进度条
-    if (percent < 100) {
-        progressDialog->setValue(percent);
-        progressDialog->show();
-    }
-}
+//        // 连接取消按钮点击信号
+//        connect(progressDialog, &QProgressDialog::canceled, this, &MainWindow::onStopExport);
+//    }
+//    // 只在进度小于100时更新进度条
+//    if (percent < 100) {
+//        progressDialog->setValue(percent);
+//        progressDialog->show();
+//    }
+//}
 
 //void MainWindow::SetExportProgress(int percent)
 //{
@@ -2805,37 +2796,37 @@ void MainWindow::onExportProgress(int percent)
 //    progressDialog->show();
 //}
 
-void MainWindow::onExportFinished()
-{
-    if (progressDialog)
-    {
-        // 在关闭对话框前断开信号连接
-        disconnect(progressDialog, &QProgressDialog::canceled, this, &MainWindow::onStopExport);
-        progressDialog->close();
-        delete progressDialog;
-        progressDialog = nullptr;
-    }
-    QMessageBox::information(this, tr("完成"), tr("文件导出成功！"));
-}
+//void MainWindow::onExportFinished()
+//{
+//    if (progressDialog)
+//    {
+//        // 在关闭对话框前断开信号连接
+//        disconnect(progressDialog, &QProgressDialog::canceled, this, &MainWindow::onStopExport);
+//        progressDialog->close();
+//        delete progressDialog;
+//        progressDialog = nullptr;
+//    }
+//    QMessageBox::information(this, tr("完成"), tr("文件导出成功！"));
+//}
 
-void MainWindow::onStopExport()
-{
-    // 只有在导出过程中才处理中止操作
-    if (progressDialog && progressDialog->value() < 100)
-    {
-        stopExport();
-        QThread::usleep(100);
-        if (m_tcp)
-        {
-             m_tcp->abortExport(); // 调用TCPThread的中止方法
-        }
-        // 关闭进度对话框
-        progressDialog->close();
-        delete progressDialog;
-        progressDialog = nullptr;
-        QMessageBox::information(this, tr("提示"), tr("导出已中止"));
-    }
-}
+//void MainWindow::onStopExport()
+//{
+//    // 只有在导出过程中才处理中止操作
+//    if (progressDialog && progressDialog->value() < 100)
+//    {
+//        stopExport();
+//        QThread::usleep(100);
+//        if (m_tcp)
+//        {
+//             m_tcp->abortExport(); // 调用TCPThread的中止方法
+//        }
+//        // 关闭进度对话框
+//        progressDialog->close();
+//        delete progressDialog;
+//        progressDialog = nullptr;
+//        QMessageBox::information(this, tr("提示"), tr("导出已中止"));
+//    }
+//}
 
 void MainWindow::PlayBackWaitfinished()
 {

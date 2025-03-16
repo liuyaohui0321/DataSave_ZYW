@@ -89,8 +89,6 @@ public:
 signals:
     void sign_sendCmd(const QByteArray &command);
     void sign_sendLenCmd(const QByteArray &command,const int &len);
-    void sign_sendExportCap(const quint64 &len);
-    void sign_send10GExportCap(const quint64 &len);
 
 //    void sign_addTcpFileHead(const QString &path,double p,double hz);  //给文件添加功率和采样hz
     void sign_addUdpFileHead(const QString &path,double p,double hz);
@@ -107,10 +105,10 @@ public slots:
     void slot_StandardItemModel(QStandardItemModel *data);
     //void slot_recvCommonRespon(const Cmd_Response_Common_Info *data);
     void slot_newrecvCommonRespon(const quint32 &type,const quint32 &id,const quint32 &result);
-    void onExportProgress(int percent);
+//    void onExportProgress(int percent);
 //    void SetExportProgress(int percent);
-    void onExportFinished();
-    void onStopExport();
+//    void onExportFinished();
+//    void onStopExport();
     void PlayBackWaitfinished();
 
 private slots:
@@ -196,7 +194,7 @@ private:
     dlg_percent_export_data *dlg5;      // 添加指向百分比导出数据对话框的指针   LYH 2.24
     dlg_export_moreFile_data *dlg6;     // 添加指向批量导出数据对话框的指针   LYH 2.24
     QStandardItemModel *Model;
-    QProgressDialog* progressDialog = nullptr; // 导出进度对话框
+//    QProgressDialog* progressDialog = nullptr; // 导出进度对话框
     playbackDialog *playbackdialog = nullptr;
 };
 
