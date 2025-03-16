@@ -384,10 +384,6 @@ void MainWindow::init()
         QString log = QString("万兆网导出数据完成").arg(getNowTime());
         ui->textBrowser_log->append(log);
     });
-    connect(m_udp, &UDPThread::sign_10GexportProgress, this, &MainWindow::on10GExportProgress);
-    connect(m_udp, &UDPThread::sign_10GexportFinished, this, &MainWindow::on10GExportFinished);
-    connect(this,&MainWindow::sign_send10GExportCap,m_udp,&UDPThread::slot_get10GExportCap);
-
 }
 
 void MainWindow::slotRefresh()
@@ -2742,37 +2738,6 @@ void MainWindow::onExportProgress(int percent)
     }
 }
 
-void MainWindow::on10GExportProgress(int percent)
-{
-    qDebug()<<"on10GExportProgress";
-    if (!progressDialog1)
-    {
-        progressDialog1 = new QProgressDialog(this);
-        //设置尺寸策略
-        progressDialog1->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-        // 设置最小尺寸
-        progressDialog1->setMinimumSize(400, 150);
-        // 设置最大尺寸（如果需要限制最大尺寸）
-        progressDialog1->setMaximumSize(800, 300);
-        progressDialog1->setWindowTitle(tr("导出进度"));
-        progressDialog1->setCancelButtonText(tr("停止导出")); // 修改取消按钮文本
-//        progressDialog->setCancelButton(nullptr); // 禁用取消按钮
-        progressDialog1->setMinimumDuration(0);    // 立即显示
-        //如果使用非模态窗口，则注释掉下面语句
-        progressDialog1->setModal(true); // 强制模态
-        // 移除关闭按钮（需保留其他标志，避免影响窗口行为）
-        progressDialog1->setWindowFlags(progressDialog->windowFlags() & ~Qt::WindowCloseButtonHint);
-
-        // 连接取消按钮点击信号
-        connect(progressDialog1, &QProgressDialog::canceled, this, &MainWindow::onStop10GExport);
-    }
-    // 只在进度小于100时更新进度条
-    if (percent < 100) {
-        progressDialog1->setValue(percent);
-        progressDialog1->show();
-    }
-}
-
 //void MainWindow::SetExportProgress(int percent)
 //{
 //    progressDialog->setValue(percent);
@@ -2792,19 +2757,6 @@ void MainWindow::onExportFinished()
     QMessageBox::information(this, tr("完成"), tr("文件导出成功！"));
 }
 
-void MainWindow::on10GExportFinished()
-{
-    if (progressDialog1)
-    {
-        // 在关闭对话框前断开信号连接
-        disconnect(progressDialog1, &QProgressDialog::canceled, this, &MainWindow::onStop10GExport);
-        progressDialog1->close();
-        delete progressDialog1;
-        progressDialog1 = nullptr;
-    }
-    QMessageBox::information(this, tr("完成"), tr("文件导出成功！"));
-}
-
 void MainWindow::onStopExport()
 {
     // 只有在导出过程中才处理中止操作
@@ -2820,25 +2772,6 @@ void MainWindow::onStopExport()
         progressDialog->close();
         delete progressDialog;
         progressDialog = nullptr;
-        QMessageBox::information(this, tr("提示"), tr("导出已中止"));
-    }
-}
-
-void MainWindow::onStop10GExport()
-{
-    // 只有在导出过程中才处理中止操作
-    if (progressDialog1 && progressDialog1->value() < 100)
-    {
-        stopExport();
-        QThread::usleep(100);
-        if (m_udp)
-        {
-             m_udp->abortExport(); // 调用UDPThread的中止方法
-        }
-        // 关闭进度对话框
-        progressDialog1->close();
-        delete progressDialog1;
-        progressDialog1 = nullptr;
         QMessageBox::information(this, tr("提示"), tr("导出已中止"));
     }
 }

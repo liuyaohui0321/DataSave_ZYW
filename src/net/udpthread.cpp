@@ -11,23 +11,10 @@ UDPThread::UDPThread(QObject *parent)
         emit sign_tellMainUdpDisconnect();
     });
 
-    m_timer1 = new QTimer(this);
-    connect(m_timer1,&QTimer::timeout,this,[=](){
+    m_timer = new QTimer(this);
+    connect(m_timer,&QTimer::timeout,this,[=](){
         emit sign_recvFinished();
-        m_timer1->stop();
-    });
-
-    m_stallTimer1 = new QTimer(this);
-    connect(m_stallTimer1, &QTimer::timeout, this, [this]()
-    {
-        if (!exportCompleted)
-        {
-//            qWarning() << "检测到进度停滞，强制完成导出";
-            receivedBytes = 0;
-            exportCompleted = true;
-            emit sign_10GexportFinished();
-            m_stallTimer1->stop();
-        }
+        m_timer->stop();
     });
 }
 
@@ -38,7 +25,7 @@ void UDPThread::slot_onDataReceived()
     quint16 senderPort;
     while (udpSocket->hasPendingDatagrams())
     {
-        m_timer1->start(1000);
+        m_timer->start(1000);
         datagram.resize(udpSocket->pendingDatagramSize());
         qint64 readByte= udpSocket->readDatagram(datagram.data(), datagram.size(),&sender,&senderPort);
         //qDebug() << "Received from" << sender.toString() << ":" << senderPort<< "Data:" << readByte;
@@ -70,35 +57,9 @@ void UDPThread::slot_addHead(const QString &path,double p,double hz)
     m_file.close();
 }
 
-void UDPThread::abortExport()
-{
-    // 只有在实际导出过程中才执行中止操作
-    if (!exportCompleted && receivedBytes > 0 && receivedBytes < totalBytes)
-    {
-        abortFlag = true;
-        exportCompleted = true;  // 设置完成标志，防止后续数据处理
-        if (udpSocket)
-        {
-            udpSocket->abort(); // 中止当前连接
-        }
-        receivedBytes = 0;
-//        tcp_exportFileInfo.isReceivingFileInfo = false;
-        m_stallTimer1->stop(); // 中止时需要停止计时器
-    }
-}
-
 void UDPThread::slot_setPath(const QString &path)
 {
     m_path = path;
-}
-
-void UDPThread::slot_get10GExportCap(const quint64 &len)
-{
-    totalBytes=len;
-    receivedBytes=0;
-    abortFlag = false;
-    exportCompleted = false;
-    qDebug() << "UDPtotalBytes:" << totalBytes;
 }
 
 void UDPThread::writeDataToFile(const QByteArray& data)
@@ -116,41 +77,6 @@ void UDPThread::writeDataToFile(const QByteArray& data)
         //qWarning() << "Failed to write data to file:" << file->fileName();
         return;
     }
-    if (abortFlag) // 中止标志检查
-    {
-        qDebug() << "导出已中止";
-        return;
-    }
-    //进度计算
-    receivedBytes += data.size();
-    int progress = static_cast<int>((receivedBytes * 100) / totalBytes);
-    // 检测进度停滞
-    if (progress >= 97 && progress <= 99)
-    {
-        if (progress != lastProgress)
-        {
-            lastProgress = progress;
-            m_stallTimer1->start(8000); // 8秒超时检测
-        }
-    }
-    else
-    {
-        m_stallTimer1->stop();
-    }
-
-    // 进度未到100时发送进度信号
-     if (progress < 100)
-     {
-         emit sign_10GexportProgress(progress);
-     }
-     // 当进度达到或超过100时，重置计数并发送完成信号
-     else
-     {
-        m_stallTimer1->stop();
-        receivedBytes = 0;
-        exportCompleted = true;
-        emit sign_10GexportFinished();
-     }
     file.close();
 }
 

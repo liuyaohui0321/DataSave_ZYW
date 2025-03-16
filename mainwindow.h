@@ -106,12 +106,9 @@ public slots:
     //void slot_recvCommonRespon(const Cmd_Response_Common_Info *data);
     void slot_newrecvCommonRespon(const quint32 &type,const quint32 &id,const quint32 &result);
     void onExportProgress(int percent);
-    void on10GExportProgress(int percent);
 //    void SetExportProgress(int percent);
     void onExportFinished();
-    void on10GExportFinished();
     void onStopExport();
-    void onStop10GExport();
     void PlayBackWaitfinished();
 
 private slots:
@@ -197,7 +194,6 @@ private:
     QStandardItemModel *Model;
     QProgressDialog* progressDialog = nullptr; // 导出进度对话框
     playbackDialog *playbackdialog = nullptr;
-    QProgressDialog* progressDialog1 = nullptr; // 万兆导出进度对话框
 };
 
 class IPDialog : public QDialog
