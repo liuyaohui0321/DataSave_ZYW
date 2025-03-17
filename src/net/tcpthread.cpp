@@ -92,6 +92,7 @@ void TCPThread::slot_getExportCap(const quint64 &len)
     m_receivedBytes=0;
     m_abortFlag = false;
     m_exportCompleted = false;
+    m_lastProgress=0;//3.17
     qDebug() << "m_totalBytes:" << m_totalBytes;
 }
 
@@ -297,7 +298,13 @@ void TCPThread::processFileData(const QByteArray& data)
         if (progress != m_lastProgress)
         {
             m_lastProgress = progress;
-            m_stallTimer->start(8000); // 8秒超时检测
+//            m_stallTimer->start(8000); // 8秒超时检测
+            int mSec=0;
+            if((m_totalBytes>0)&&(m_totalBytes<=0x40000000*8))  mSec=8;
+            else if ((m_totalBytes>0x40000000*8)&&(m_totalBytes<=0x40000000*16)) mSec=16;
+            else if ((m_totalBytes>0x40000000*16)&&(m_totalBytes<=0x40000000*32)) mSec=32;
+            else if (m_totalBytes>0x40000000*32)   mSec=60;
+            m_stallTimer->start(mSec); // 超时检测
         }
     }
     else
@@ -316,6 +323,7 @@ void TCPThread::processFileData(const QByteArray& data)
         m_stallTimer->stop();
         m_receivedBytes = 0;
         m_exportCompleted = true;
+        m_lastProgress=0;
         emit sign_exportFinished();
      }
 
@@ -372,10 +380,10 @@ void TCPThread::abortExport()
     {
         m_abortFlag = true;
         m_exportCompleted = true;  // 设置完成标志，防止后续数据处理
-        if (m_tcpsocket)
-        {
-            m_tcpsocket->abort(); // 中止当前连接
-        }
+//        if (m_tcpsocket)
+//        {
+//            m_tcpsocket->abort(); // 中止当前连接
+//        }
         m_receivedBytes = 0;
         tcp_exportFileInfo.isReceivingFileInfo = false;
         m_stallTimer->stop(); // 中止时需要停止计时器

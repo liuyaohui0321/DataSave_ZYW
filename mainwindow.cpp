@@ -2763,7 +2763,7 @@ void MainWindow::onStopExport()
     if (progressDialog && progressDialog->value() < 100)
     {
         stopExport();
-        QThread::usleep(100);
+//        QThread::usleep(1000);
         if (m_tcp)
         {
              m_tcp->abortExport(); // 调用TCPThread的中止方法
