@@ -1,6 +1,6 @@
 ﻿#include "mainwindow.h"
 #include "ui_mainwindow.h"
-
+#include <QComboBox>
 #include <QDebug>
 
 #pragma execution_character_set("utf-8")
@@ -2917,41 +2917,142 @@ void MainWindow::onTreeViewClicked(const QModelIndex &index)
     }
 }
 
-
-
-
-
-
 IPDialog::IPDialog(QWidget *parent): QDialog(parent)
 {
-    setWindowTitle("设置IP地址");
-    setFixedSize(500, 200);
+        setWindowTitle("设置IP地址");
+        setFixedSize(800, 600);
 
-    QVBoxLayout *mainLayout = new QVBoxLayout(this);
-    // 添加IP地址输入区域（移到底部）
-    QHBoxLayout *ipInputLayout = new QHBoxLayout();
-    QLabel *ipLabel = new QLabel("IP地址:", this);
-    ipLineEdit = new QLineEdit(this);
-    ipLineEdit->setPlaceholderText("请输入IP地址");
-    ipLineEdit->setMinimumWidth(300); // 设置最小宽度
+        QVBoxLayout *mainLayout = new QVBoxLayout(this);
 
-    ipInputLayout->addWidget(ipLabel);
-    ipInputLayout->addWidget(ipLineEdit);
-    mainLayout->addLayout(ipInputLayout);
+        // 添加说明标签
+        QLabel *descLabel = new QLabel("IP地址对应关系:", this);
+        descLabel->setStyleSheet("font-weight: bold; margin-bottom: 5px;");
+        mainLayout->addWidget(descLabel);
 
-    // 按钮布局
-    QHBoxLayout *buttonLayout = new QHBoxLayout();
-    QPushButton *okButton = new QPushButton("确定", this);
-    QPushButton *cancelButton = new QPushButton("取消", this);
+        // 创建对应关系表格
+        QGridLayout *ipMapLayout = new QGridLayout();
+        ipMapLayout->addWidget(new QLabel("选项", this), 0, 0);
+        ipMapLayout->addWidget(new QLabel("对应IP地址", this), 0, 1);
 
-    buttonLayout->addStretch();
-    buttonLayout->addWidget(okButton);
-    buttonLayout->addWidget(cancelButton);
-    mainLayout->addLayout(buttonLayout);
-    // 连接信号槽
-    connect(okButton, &QPushButton::clicked, this, &IPDialog::onOKClicked);
-    connect(cancelButton, &QPushButton::clicked, this, &IPDialog::reject);
+        // 添加对应关系
+        for(int i = 1; i <= 3; i++) {
+            QLabel *numLabel = new QLabel(QString::number(i), this);
+            QLabel *ipLabel = new QLabel(getIPAddressForType(i), this);
+
+            numLabel->setStyleSheet("padding: 5px; background-color: #f0f0f0;");
+            ipLabel->setStyleSheet("padding: 5px; background-color: #f0f0f0;");
+
+            ipMapLayout->addWidget(numLabel, i, 0);
+            ipMapLayout->addWidget(ipLabel, i, 1);
+        }
+
+        // 添加默认值说明
+        QLabel *defaultLabel = new QLabel("默认值/其他: 192.168.0.32", this);
+        defaultLabel->setStyleSheet("color: #666666; padding: 5px;");
+        ipMapLayout->addWidget(defaultLabel, 5, 0, 1, 2);
+
+        // 将对应关系表格添加到主布局
+        mainLayout->addLayout(ipMapLayout);
+
+        // 添加分隔线
+        QFrame *line = new QFrame(this);
+        line->setFrameShape(QFrame::HLine);
+        line->setFrameShadow(QFrame::Sunken);
+        mainLayout->addWidget(line);
+
+        // 添加选择区域
+        QGridLayout *selectionLayout = new QGridLayout();
+        QLabel *selectLabel = new QLabel("请选择IP类型:", this);
+        ipComboBox = new QComboBox(this);
+        ipComboBox->addItem("1");
+        ipComboBox->addItem("2");
+        ipComboBox->addItem("3");
+//        ipComboBox->addItem("4");
+
+        selectionLayout->addWidget(selectLabel, 0, 0);
+        selectionLayout->addWidget(ipComboBox, 0, 1);
+        mainLayout->addLayout(selectionLayout);
+
+        // 添加当前选择的IP显示
+        QLabel *currentSelectionLabel = new QLabel("当前选择的IP地址:", this);
+        QLabel *currentIPLabel = new QLabel(getIPAddressForType(1), this);
+        currentIPLabel->setStyleSheet("font-weight: bold; color: #0066cc;");
+
+        QHBoxLayout *currentSelectionLayout = new QHBoxLayout();
+        currentSelectionLayout->addWidget(currentSelectionLabel);
+        currentSelectionLayout->addWidget(currentIPLabel);
+        mainLayout->addLayout(currentSelectionLayout);
+
+        // 添加弹簧
+        mainLayout->addStretch();
+
+        // 添加IP地址输入区域（移到底部）
+        QHBoxLayout *ipInputLayout = new QHBoxLayout();
+        QLabel *ipLabel = new QLabel("IP地址:", this);
+        ipLineEdit = new QLineEdit(this);
+        ipLineEdit->setPlaceholderText("请输入IP地址");
+        ipLineEdit->setMinimumWidth(300); // 设置最小宽度
+
+        ipInputLayout->addWidget(ipLabel);
+        ipInputLayout->addWidget(ipLineEdit);
+        mainLayout->addLayout(ipInputLayout);
+
+        // 按钮布局
+        QHBoxLayout *buttonLayout = new QHBoxLayout();
+        QPushButton *okButton = new QPushButton("确定", this);
+        QPushButton *cancelButton = new QPushButton("取消", this);
+
+        buttonLayout->addStretch();
+        buttonLayout->addWidget(okButton);
+        buttonLayout->addWidget(cancelButton);
+        mainLayout->addLayout(buttonLayout);
+
+        // 连接信号槽
+        connect(okButton, &QPushButton::clicked, this, &IPDialog::onOKClicked);
+        connect(cancelButton, &QPushButton::clicked, this, &IPDialog::reject);
+        connect(ipComboBox, QOverload<int>::of(&QComboBox::currentIndexChanged),
+                [=](int index) {
+                    currentIPLabel->setText(getIPAddressForType(index + 1));
+                });
+
+        // 设置边距
+        mainLayout->setContentsMargins(20, 20, 20, 20);
+        mainLayout->setSpacing(15);
 }
+
+
+
+
+//IPDialog::IPDialog(QWidget *parent): QDialog(parent)
+//{
+//    setWindowTitle("设置IP地址");
+//    setFixedSize(500, 200);
+
+//    QVBoxLayout *mainLayout = new QVBoxLayout(this);
+//    // 添加IP地址输入区域（移到底部）
+//    QHBoxLayout *ipInputLayout = new QHBoxLayout();
+//    QLabel *ipLabel = new QLabel("IP地址:", this);
+//    ipLineEdit = new QLineEdit(this);
+//    ipLineEdit->setPlaceholderText("请输入IP地址");
+//    ipLineEdit->setMinimumWidth(300); // 设置最小宽度
+
+//    ipInputLayout->addWidget(ipLabel);
+//    ipInputLayout->addWidget(ipLineEdit);
+//    mainLayout->addLayout(ipInputLayout);
+
+//    // 按钮布局
+//    QHBoxLayout *buttonLayout = new QHBoxLayout();
+//    QPushButton *okButton = new QPushButton("确定", this);
+//    QPushButton *cancelButton = new QPushButton("取消", this);
+
+//    buttonLayout->addStretch();
+//    buttonLayout->addWidget(okButton);
+//    buttonLayout->addWidget(cancelButton);
+//    mainLayout->addLayout(buttonLayout);
+//    // 连接信号槽
+//    connect(okButton, &QPushButton::clicked, this, &IPDialog::onOKClicked);
+//    connect(cancelButton, &QPushButton::clicked, this, &IPDialog::reject);
+//}
 
 void IPDialog::onOKClicked()
 {
@@ -2959,12 +3060,12 @@ void IPDialog::onOKClicked()
 
     if (ipAddress.isEmpty()) {
         QMessageBox::warning(this, "警告", "请输入IP地址");
-        return;
+//        return;
     }
 
     if (!validateIPAddress(ipAddress)) {
         QMessageBox::warning(this, "警告", "请输入有效的IP地址");
-        return;
+//        return;
     }
     emit ipSelected(ipAddress);
     accept();

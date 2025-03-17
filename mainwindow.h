@@ -11,6 +11,7 @@
 #include <qlineedit.h>
 #include <QProgressDialog>
 #include <QRegularExpression>
+#include <QComboBox>
 
 #include "src/contextmenu.h"
 #include "src/helper/protocol_disk.h"
@@ -201,7 +202,7 @@ class IPDialog : public QDialog
     Q_OBJECT
 
 public:
-    IPDialog(QWidget *parent = nullptr);
+        IPDialog(QWidget *parent = nullptr);
 
 signals:
     void ipSelected(const QString &ipAddress);
@@ -210,7 +211,19 @@ private slots:
     void onOKClicked();
 
 private:
+    QComboBox *ipComboBox;
     QLineEdit *ipLineEdit;
+    QString getIPAddressForType(int type) const
+    {
+        switch(type)
+        {
+            case 1: return "192.168.0.33";
+            case 2: return "192.168.0.34";
+            case 3: return "192.168.0.35";
+            case 4: return "192.168.0.36";
+            default: return "192.168.0.32";
+        }
+    }
     bool validateIPAddress(const QString &ip);
 };
 
