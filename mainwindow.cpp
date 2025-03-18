@@ -1027,16 +1027,16 @@ void MainWindow::MultiFilePlayBack()
         // 设置 X1 (回放通道)
         switch (gth)
         {
-            case BackGTH::GTH_NETWORK:
-                strLog ="单次读取网口";
-                cmd_MorefilePlayBack_info.read_func = 0;
-                break;
-            case BackGTH::GTH_1X:
-                strLog ="单次读取GTH_1X";
-                cmd_MorefilePlayBack_info.read_func = 16;
-                break;
-            case BackGTH::GTH_8X:
-                strLog ="单次读取GTH_8X";
+//            case BackGTH::GTH_NETWORK:
+//                strLog ="单次读取网口";
+//                cmd_MorefilePlayBack_info.read_func = 0;
+//                break;
+//            case BackGTH::GTH_1X:
+//                strLog ="单次读取GTH_1X";
+//                cmd_MorefilePlayBack_info.read_func = 16;
+//                break;
+            case BackGTH::GTH_4X:
+                strLog ="单次读取GTH_4X";
                 cmd_MorefilePlayBack_info.read_func = 32;
                 break;
         }
@@ -1457,32 +1457,32 @@ QString strLog;
 // 设置 X1 (回放通道)
     if (ReadMode::ReadOnce == mode) {
         switch (gth) {
-            case BackGTH::GTH_NETWORK:
-                strLog ="单次读取网口";
-                cmd_read_file_func_info.read_func = 0;
-                break;
-            case BackGTH::GTH_1X:
-                strLog ="单次读取GTH_1X";
-                cmd_read_file_func_info.read_func = 16;
-                break;
-            case BackGTH::GTH_8X:
-                strLog ="单次读取GTH_8X";
+//            case BackGTH::GTH_NETWORK:
+//                strLog ="单次读取网口";
+//                cmd_read_file_func_info.read_func = 0;
+//                break;
+//            case BackGTH::GTH_1X:
+//                strLog ="单次读取GTH_1X";
+//                cmd_read_file_func_info.read_func = 16;
+//                break;
+            case BackGTH::GTH_4X:
+                strLog ="单次读取GTH_4X";
                 cmd_read_file_func_info.read_func = 32;
                 break;
         }
     }
     else if(ReadMode::LoopRead == mode) {
             switch (gth) {
-                case BackGTH::GTH_NETWORK:
-                    strLog = QString(" 模式为：循环回放网口，次数为:%1").arg(count);
-                    cmd_read_file_func_info.read_func = 256;
-                    break;
-                case BackGTH::GTH_1X:
-                    strLog = QString(" 模式为：循环回放GTH_1X，次数为:%1").arg(count);
-                    cmd_read_file_func_info.read_func = 272;
-                    break;
-                case BackGTH::GTH_8X:
-                    strLog = QString(" 模式为：循环回放GTH_8X，次数为:%1").arg(count);
+//                case BackGTH::GTH_NETWORK:
+//                    strLog = QString(" 模式为：循环回放网口，次数为:%1").arg(count);
+//                    cmd_read_file_func_info.read_func = 256;
+//                    break;
+//                case BackGTH::GTH_1X:
+//                    strLog = QString(" 模式为：循环回放GTH_1X，次数为:%1").arg(count);
+//                    cmd_read_file_func_info.read_func = 272;
+//                    break;
+                case BackGTH::GTH_4X:
+                    strLog = QString(" 模式为：循环回放GTH_4X，次数为:%1").arg(count);
                     cmd_read_file_func_info.read_func = 288;
                     break;
             }

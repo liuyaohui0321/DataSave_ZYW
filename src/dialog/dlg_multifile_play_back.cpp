@@ -56,9 +56,9 @@ void dlg_multifile_play_back::initUI()
 
 //    ui->xuhuan_cnt->setText("1");
 
-    ui->m_comGth->addItem(QString("GTH_8x"), static_cast<int>(BackGTH::GTH_8X));
-    ui->m_comGth->addItem(QString("NetWork"), static_cast<int>(BackGTH::GTH_NETWORK));
-    ui->m_comGth->addItem(QString("GTH_1x"), static_cast<int>(BackGTH::GTH_1X));
+    ui->m_comGth->addItem(QString("GTH_4x"), static_cast<int>(BackGTH::GTH_4X));
+//    ui->m_comGth->addItem(QString("NetWork"), static_cast<int>(BackGTH::GTH_NETWORK));
+//    ui->m_comGth->addItem(QString("GTH_1x"), static_cast<int>(BackGTH::GTH_1X));
 }
 
 void dlg_multifile_play_back::initConnect()
