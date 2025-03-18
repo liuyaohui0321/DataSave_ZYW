@@ -38,7 +38,10 @@ namespace Ui {
 class MainWindow;
 }
 QT_END_NAMESPACE
-
+struct IPData {
+    int ipValue;
+    QString ipAddress;
+};
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
@@ -145,8 +148,7 @@ private slots:
     void updateStatusLabel(const QColor &color);
     void setFiberStatus(FiberStatus status);
     void showIPDialog();
-    void updateIPData(const QString &ipAddress);
-
+    void updateIPData(int index,const QString &ipAddress);
 
 private:
     Ui::MainWindow *ui;
@@ -184,6 +186,7 @@ private:
     };
     int lastOrderType = 0;
     quint64 export_cap=0;
+    IPData ipData;
 private:
     DlgPlayBackData* dlg;               // 添加指向回放对话框的指针   LYH 2.14
     dlg_acquisition* dlg1;              // 添加指向采集对话框的指针   LYH 2.14
@@ -205,7 +208,7 @@ public:
         IPDialog(QWidget *parent = nullptr);
 
 signals:
-    void ipSelected(const QString &ipAddress);
+    void ipSelected(int ip,const QString &ipAddress);
 
 private slots:
     void onOKClicked();

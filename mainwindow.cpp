@@ -2372,8 +2372,24 @@ void MainWindow::showIPDialog()
     delete dialog;
 }
 
-void MainWindow::updateIPData(const QString &ipAddress)
+void MainWindow::updateIPData(int index,const QString &ipAddress)
 {
+    ipData.ipValue = index + 1;  // 更新结构体中的IP值
+    ipData.ipAddress = ipAddress;
+    Cmd_Disk_IPSET cmd_disk_info;
+    cmd_disk_info.order_head = ORDERHEAD;
+    cmd_disk_info.head = DSV_PACKET_HEADER;
+    cmd_disk_info.source_ID = 0;
+    cmd_disk_info.dest_ID = 0;
+    cmd_disk_info.oper_type = 0xB2;
+    cmd_disk_info.oper_ID = 0x02;
+    cmd_disk_info.package_num = 0;
+    cmd_disk_info.IPADDR = ipData.ipValue;
+    cmd_disk_info.check = 0;
+    cmd_disk_info.end = DSV_PACKET_TAIL;
+    QByteArray sendData = QByteArray((char *) (&cmd_disk_info), sizeof(Cmd_Disk_IPSET));
+    emit sign_sendCmd(sendData);
+#if 0
     uint ips[4];
     QStringList parts = ipAddress.split(".");
     for (int i = 0; i < 4; ++i)
@@ -2398,6 +2414,7 @@ void MainWindow::updateIPData(const QString &ipAddress)
     cmd_disk_info.end = DSV_PACKET_TAIL;
     QByteArray sendData = QByteArray((char *) (&cmd_disk_info), sizeof(Cmd_Disk_IPSET));
     emit sign_sendCmd(sendData);
+#endif
 }
 
 void MainWindow::slot_CustomContextMenuRequested(const QPoint &pos)
@@ -3067,7 +3084,7 @@ void IPDialog::onOKClicked()
         QMessageBox::warning(this, "警告", "请输入有效的IP地址");
 //        return;
     }
-    emit ipSelected(ipAddress);
+    emit ipSelected(ipComboBox->currentIndex(),ipAddress);
     accept();
 }
 
