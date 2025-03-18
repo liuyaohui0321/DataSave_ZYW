@@ -197,6 +197,7 @@ private:
     QStandardItemModel *Model;
 //    QProgressDialog* progressDialog = nullptr; // 导出进度对话框
     playbackDialog *playbackdialog = nullptr;
+    QDialog* m_exportProgressDialog = nullptr;// 导出指令发送后弹窗对话框
 };
 
 class IPDialog : public QDialog
