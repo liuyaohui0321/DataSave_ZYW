@@ -11,7 +11,6 @@
 #include <qlineedit.h>
 #include <QProgressDialog>
 #include <QRegularExpression>
-#include <QComboBox>
 
 #include "src/contextmenu.h"
 #include "src/helper/protocol_disk.h"
@@ -49,7 +48,6 @@ public:
 
     void init();    //初始化指针和界面设置
     QString buildPath(QModelIndex index); //构建树的路径
-    QString readConfig(const QString &key, QString group, const QString &path);
 
     //菜单栏样式配置
     void menubarInit();
@@ -173,8 +171,6 @@ private:
 
     QLabel *m_pSocklLabel;  //用于显示tcp连接状态
     QLabel *m_udpLabel;
-    QComboBox *m_netComboBox;//TCP当前列表
-    QPushButton *m_clientBtn;//TCP断开连接
 
     ContextMenu *m_pContextMenu{nullptr};  //右键菜单
     TreeItemInfo m_TreeItemInfo; //选中项信息

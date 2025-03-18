@@ -1,7 +1,7 @@
 ﻿#include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include <QDebug>
-#include <QSettings>
+
 
 #pragma execution_character_set("utf-8")
 
@@ -75,65 +75,7 @@ void MainWindow::menubarInit()
         "font-size: 14pt; "
         "font-weight: bold;"
         );
-    auto strip1 =  readConfig(QString("ip1"),
-                                                  "BaseConfig",
-                                    QCoreApplication::applicationDirPath()+"/data_save_card.ini");
 
-    auto strip2 =  readConfig(QString("ip2"),
-                                                 "BaseConfig",
-                                                 QCoreApplication::applicationDirPath()+"/data_save_card.ini");
-    m_netComboBox = new QComboBox(this);
-    m_netComboBox->addItem(strip1);
-    m_netComboBox->addItem(strip2);
-    m_clientBtn = new QPushButton("连接",this);
-
-    connect(m_clientBtn,&QPushButton::clicked,[this]()
-    {
-        // 调用TCPThread的槽关闭连接
-         m_tcp->closeConnection();
-    });
-    // 处理关闭结果
-    connect(m_tcp, &TCPThread::connectionClosed, this, [this](QString ip, quint16 port, QAbstractSocket::SocketState state)
-    {
-        if (m_netComboBox->currentText() == ip) return;
-
-        QString temp;
-        if (state == QAbstractSocket::UnconnectedState)
-        {
-            temp = QString("%1: [%2:%3] 客户端断开连接。").arg(getNowTime()).arg(ip).arg(port);
-        }
-        else
-        {
-            qDebug() << "断开连接失败！";
-            temp = QString("%1: [%2:%3] 客户端断开连接失败。").arg(getNowTime()).arg(ip).arg(port);
-        }
-        ui->textBrowser_log->append(temp);
-    });
-
-//    connect(m_clientBtn,&QPushButton::clicked,[this]()
-//    {
-
-//            QString ip=m_socket->peerAddress().toString();//获取连接的 ip地址
-//            if(m_netComboBox->currentText()==ip){
-//                return ;
-//            }
-
-//            quint16 port=m_socket->peerPort();//获取连接的 端口号
-//            //m_semaphore->release();
-//            m_socket->close();
-
-//            if (m_socket->state() == QAbstractSocket::UnconnectedState)
-//            {
-//                QString temp=QString("%1: [%2:%3] 客服端断开连接。").arg(getNowTime()).arg(ip).arg(port);
-//                ui->textBrowser_log->append(temp);
-//            }
-//            else
-//            {
-//                qDebug()<<"断开连接失败！";
-//                QString temp=QString("%1: [%2:%3] 客服端断开连接失败。").arg(getNowTime()).arg(ip).arg(port);
-//                ui->textBrowser_log->append(temp);
-//            }
-//    });
 
     m_udpLabel = new QLabel("等待万兆网连接",this);
     m_udpLabel->setFixedSize(180,32);
@@ -144,9 +86,6 @@ void MainWindow::menubarInit()
         "font-size: 14pt; "
         "font-weight: bold;"
         );
-
-    hbox->addWidget(m_netComboBox);
-    hbox->addWidget(m_clientBtn);
 
     hbox->addWidget(m_pSocklLabel);
     hbox->addSpacing(50);
@@ -1085,16 +1024,16 @@ void MainWindow::MultiFilePlayBack()
         // 设置 X1 (回放通道)
         switch (gth)
         {
-            case BackGTH::GTH_NETWORK:
-                strLog ="单次读取网口";
-                cmd_MorefilePlayBack_info.read_func = 0;
-                break;
-            case BackGTH::GTH_1X:
-                strLog ="单次读取GTH_1X";
-                cmd_MorefilePlayBack_info.read_func = 16;
-                break;
-            case BackGTH::GTH_8X:
-                strLog ="单次读取GTH_8X";
+//            case BackGTH::GTH_NETWORK:
+//                strLog ="单次读取网口";
+//                cmd_MorefilePlayBack_info.read_func = 0;
+//                break;
+//            case BackGTH::GTH_1X:
+//                strLog ="单次读取GTH_1X";
+//                cmd_MorefilePlayBack_info.read_func = 16;
+//                break;
+            case BackGTH::GTH_4X:
+                strLog ="单次读取GTH_4X";
                 cmd_MorefilePlayBack_info.read_func = 32;
                 break;
         }
@@ -1515,32 +1454,32 @@ QString strLog;
 // 设置 X1 (回放通道)
     if (ReadMode::ReadOnce == mode) {
         switch (gth) {
-            case BackGTH::GTH_NETWORK:
-                strLog ="单次读取网口";
-                cmd_read_file_func_info.read_func = 0;
-                break;
-            case BackGTH::GTH_1X:
-                strLog ="单次读取GTH_1X";
-                cmd_read_file_func_info.read_func = 16;
-                break;
-            case BackGTH::GTH_8X:
-                strLog ="单次读取GTH_8X";
+//            case BackGTH::GTH_NETWORK:
+//                strLog ="单次读取网口";
+//                cmd_read_file_func_info.read_func = 0;
+//                break;
+//            case BackGTH::GTH_1X:
+//                strLog ="单次读取GTH_1X";
+//                cmd_read_file_func_info.read_func = 16;
+//                break;
+            case BackGTH::GTH_4X:
+                strLog ="单次读取GTH_4X";
                 cmd_read_file_func_info.read_func = 32;
                 break;
         }
     }
     else if(ReadMode::LoopRead == mode) {
             switch (gth) {
-                case BackGTH::GTH_NETWORK:
-                    strLog = QString(" 模式为：循环回放网口，次数为:%1").arg(count);
-                    cmd_read_file_func_info.read_func = 256;
-                    break;
-                case BackGTH::GTH_1X:
-                    strLog = QString(" 模式为：循环回放GTH_1X，次数为:%1").arg(count);
-                    cmd_read_file_func_info.read_func = 272;
-                    break;
-                case BackGTH::GTH_8X:
-                    strLog = QString(" 模式为：循环回放GTH_8X，次数为:%1").arg(count);
+//                case BackGTH::GTH_NETWORK:
+//                    strLog = QString(" 模式为：循环回放网口，次数为:%1").arg(count);
+//                    cmd_read_file_func_info.read_func = 256;
+//                    break;
+//                case BackGTH::GTH_1X:
+//                    strLog = QString(" 模式为：循环回放GTH_1X，次数为:%1").arg(count);
+//                    cmd_read_file_func_info.read_func = 272;
+//                    break;
+                case BackGTH::GTH_4X:
+                    strLog = QString(" 模式为：循环回放GTH_4X，次数为:%1").arg(count);
                     cmd_read_file_func_info.read_func = 288;
                     break;
             }
@@ -2996,24 +2935,6 @@ QString MainWindow::buildPath(QModelIndex index) {
     }
 
     return path;
-}
-
-QString MainWindow::readConfig(const QString &key, QString group, const QString &path)
-{
-    QString user_value = QString("");
-    if (key.isEmpty())
-    {
-        return user_value;
-    }
-    else
-    {
-        // 创建配置文件操作对象，使用智能指针管理
-        QSettings pConfig(path, QSettings::IniFormat);
-        // 读取用户配置信息
-        QString user_value = pConfig.value(QString(group) + "/" + key).toString();
-
-        return user_value;
-    }
 }
 
 void MainWindow::slot_onItemSelected()
