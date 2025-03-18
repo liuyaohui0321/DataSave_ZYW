@@ -248,6 +248,11 @@ void TCPThread::processCompletePacket(QByteArray &data)
 //        qDebug() << "获取回放结束的应答包."<<data.toHex();
         emit stopplayback();
     }
+    if(head == HEAD && end == END && oper_type == 0xC5 && oper_ID == 0x11)
+    {
+        qDebug() << "收到导出完成应答包";
+        emit sign_exportFinished1();
+    }
 }
 
 

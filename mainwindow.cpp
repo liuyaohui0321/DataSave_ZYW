@@ -348,7 +348,7 @@ void MainWindow::init()
 
 //    connect(this,&MainWindow::sign_addTcpFileHead,m_tcp,&TCPThread::slot_addTcpHead);
     connect(m_tcp,&TCPThread::sign_speed,this,&MainWindow::slot_showSpeed);
-
+    connect(m_tcp,&TCPThread::sign_exportFinished1, this, &MainWindow::slot_exportFinished1);
     m_udpInfoWidget = new udpWidget(this);
     m_udpInfoWidget->hide();
 
@@ -1700,7 +1700,39 @@ void MainWindow::slotExport() //导出
             }           
             else
             {
-                emit sign_send10GExportCap(m_ExportFileInfo.size);
+//                emit sign_send10GExportCap(m_ExportFileInfo.size);
+                // 弹出对话框
+                if(!m_exportProgressDialog)
+                {
+                    m_exportProgressDialog = new QDialog(this);
+                    m_exportProgressDialog->setWindowTitle(tr("导出进度"));
+                    m_exportProgressDialog->setModal(true);
+                    m_exportProgressDialog->setFixedSize(400, 200); // 设置更大的固定尺寸
+                    // 设置窗口标志禁用关闭按钮
+                    m_exportProgressDialog->setWindowFlags(m_exportProgressDialog->windowFlags() &
+                                                         ~Qt::WindowCloseButtonHint |
+                                                         Qt::WindowTitleHint);
+                    QVBoxLayout* layout = new QVBoxLayout(m_exportProgressDialog);
+                    QLabel* label = new QLabel(tr("导出中，无法进行其他操作"), m_exportProgressDialog);
+                    label->setAlignment(Qt::AlignCenter); // 文字水平垂直居中
+                    QFont font = label->font();
+                    font.setPointSize(14); // 增大字体
+                    label->setFont(font);
+
+                    QPushButton* stopBtn = new QPushButton(tr("停止导出"), m_exportProgressDialog);
+                    stopBtn->setFixedSize(120, 40); // 设置按钮大小
+
+                    // 添加布局元素
+                    layout->addStretch(1);
+                    layout->addWidget(label, 0, Qt::AlignCenter);
+                    layout->addSpacing(30);
+                    layout->addWidget(stopBtn, 0, Qt::AlignCenter);
+                    layout->addStretch(1);
+
+                    connect(stopBtn, &QPushButton::clicked, this, &MainWindow::stop10GExport);
+                    connect(this, &MainWindow::destroyed, m_exportProgressDialog, &QDialog::deleteLater);
+                }
+                m_exportProgressDialog->show();
                 //qDebug()<<"使用万兆网来接收数据";
                 QString log = QString("%1: 正在使用万兆网导出数据中...").arg(getNowTime());
                 ui->textBrowser_log->append(log);
@@ -1734,6 +1766,33 @@ void MainWindow::slotExport() //导出
 
 void MainWindow::stopExport()
 {
+    //下发内容
+    Cmd_Export_File_Func_Info cmd_stop_exportinfo;
+    cmd_stop_exportinfo.order_head = ORDERHEAD;
+    cmd_stop_exportinfo.head = DSV_PACKET_HEADER;
+    cmd_stop_exportinfo.source_ID = 0;
+    cmd_stop_exportinfo.dest_ID = 0;
+    cmd_stop_exportinfo.oper_type = 0xD2;
+    cmd_stop_exportinfo.oper_ID = 0x0A;
+    cmd_stop_exportinfo.package_num = 0;
+    cmd_stop_exportinfo.check = 0;
+    cmd_stop_exportinfo.end = DSV_PACKET_TAIL;
+    QByteArray sendData = QByteArray((char *) (&cmd_stop_exportinfo), sizeof(Cmd_Export_File_Func_Info));
+    QString log = QString("%1:正在执行停止导出文件操作.").arg(getNowTime());
+    ui->textBrowser_log->append(log);
+    //记录操作类型
+    lastOrderType = TYPE::STOP_EXPORT;
+    emit sign_sendCmd(sendData);
+}
+
+void MainWindow::stop10GExport()
+{
+    if(m_exportProgressDialog)
+    {
+        m_exportProgressDialog->close();
+        delete m_exportProgressDialog;
+        m_exportProgressDialog = nullptr;
+    }
     //下发内容
     Cmd_Export_File_Func_Info cmd_stop_exportinfo;
     cmd_stop_exportinfo.order_head = ORDERHEAD;
@@ -1910,10 +1969,44 @@ void MainWindow::PercentExport()
             else
             {
                 //qDebug()<<"使用万兆网来接收数据";
+                // 弹出对话框
+                if(!m_exportProgressDialog)
+                {
+                    m_exportProgressDialog = new QDialog(this);
+                    m_exportProgressDialog->setWindowTitle(tr("导出进度"));
+                    m_exportProgressDialog->setModal(true);
+                    m_exportProgressDialog->setFixedSize(400, 200); // 设置更大的固定尺寸
+                    // 设置窗口标志禁用关闭按钮
+                    m_exportProgressDialog->setWindowFlags(m_exportProgressDialog->windowFlags() &
+                                                         ~Qt::WindowCloseButtonHint |
+                                                         Qt::WindowTitleHint);
+                    QVBoxLayout* layout = new QVBoxLayout(m_exportProgressDialog);
+                    QLabel* label = new QLabel(tr("导出中，无法进行其他操作"), m_exportProgressDialog);
+                    label->setAlignment(Qt::AlignCenter); // 文字水平垂直居中
+                    QFont font = label->font();
+                    font.setPointSize(14); // 增大字体
+                    label->setFont(font);
+
+                    QPushButton* stopBtn = new QPushButton(tr("停止导出"), m_exportProgressDialog);
+                    stopBtn->setFixedSize(120, 40); // 设置按钮大小
+
+                    // 添加布局元素
+                    layout->addStretch(1);
+                    layout->addWidget(label, 0, Qt::AlignCenter);
+                    layout->addSpacing(30);
+                    layout->addWidget(stopBtn, 0, Qt::AlignCenter);
+                    layout->addStretch(1);
+
+                    connect(stopBtn, &QPushButton::clicked, this, &MainWindow::stop10GExport);
+                    connect(this, &MainWindow::destroyed, m_exportProgressDialog, &QDialog::deleteLater);
+                }
+                m_exportProgressDialog->show();
                 QString log = QString("%1: 正在使用万兆网导出数据中...").arg(getNowTime());
                 ui->textBrowser_log->append(log);
                 QString path = dlg5->getLocalPath();
                 emit sign_setUdpFilePath(path);
+                stateShow->setText("导出中...");
+                stateShow->setStyleSheet("color: green;");
             }
         }
     });
@@ -1994,10 +2087,44 @@ void MainWindow::MoreFileExport()
             else
             {
                 //qDebug()<<"使用万兆网来接收数据";
+                // 弹出对话框
+                if(!m_exportProgressDialog)
+                {
+                    m_exportProgressDialog = new QDialog(this);
+                    m_exportProgressDialog->setWindowTitle(tr("导出进度"));
+                    m_exportProgressDialog->setModal(true);
+                    m_exportProgressDialog->setFixedSize(400, 200); // 设置更大的固定尺寸
+                    // 设置窗口标志禁用关闭按钮
+                    m_exportProgressDialog->setWindowFlags(m_exportProgressDialog->windowFlags() &
+                                                         ~Qt::WindowCloseButtonHint |
+                                                         Qt::WindowTitleHint);
+                    QVBoxLayout* layout = new QVBoxLayout(m_exportProgressDialog);
+                    QLabel* label = new QLabel(tr("导出中，无法进行其他操作"), m_exportProgressDialog);
+                    label->setAlignment(Qt::AlignCenter); // 文字水平垂直居中
+                    QFont font = label->font();
+                    font.setPointSize(14); // 增大字体
+                    label->setFont(font);
+
+                    QPushButton* stopBtn = new QPushButton(tr("停止导出"), m_exportProgressDialog);
+                    stopBtn->setFixedSize(120, 40); // 设置按钮大小
+
+                    // 添加布局元素
+                    layout->addStretch(1);
+                    layout->addWidget(label, 0, Qt::AlignCenter);
+                    layout->addSpacing(30);
+                    layout->addWidget(stopBtn, 0, Qt::AlignCenter);
+                    layout->addStretch(1);
+
+                    connect(stopBtn, &QPushButton::clicked, this, &MainWindow::stop10GExport);
+                    connect(this, &MainWindow::destroyed, m_exportProgressDialog, &QDialog::deleteLater);
+                }
+                m_exportProgressDialog->show();
                 QString log = QString("%1: 正在使用万兆网导出数据中...").arg(getNowTime());
                 ui->textBrowser_log->append(log);
                 QString path = dlg6->getLocalPath();
                 emit sign_setUdpFilePath(path);
+                stateShow->setText("导出中...");
+                stateShow->setStyleSheet("color: green;");
             }
         }
     });
@@ -2806,6 +2933,24 @@ void MainWindow::PlayBackWaitfinished()
             playbackdialog = nullptr;
         }
     });
+}
+
+void MainWindow::slot_exportFinished1()
+{
+    if(m_exportProgressDialog)
+    {
+        m_exportProgressDialog->close();
+        delete m_exportProgressDialog;
+        m_exportProgressDialog = nullptr;
+    }
+    QMessageBox::information(this, tr("导出完成"), tr("文件导出成功完成！"));
+
+    // 可选：更新状态显示
+    stateShow->setText("导出完成");
+    stateShow->setStyleSheet("color: blue;");
+
+    QString log = QString("%1: 文件导出完成").arg(getNowTime());
+    ui->textBrowser_log->append(log);
 }
 
 

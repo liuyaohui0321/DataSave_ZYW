@@ -59,6 +59,7 @@ signals:
     void sign_getNewConnect(const QString &client); //获取到了新的连接
     void sign_tcpNotConnect();  //提示当前连接未建立
     void sign_tellMainDisconnect();     //提示当前连接已经断开
+    void sign_exportFinished1();
 
     //解析出来的内容
     void sign_diskData(const Cmd_Disk_State_Info &data);

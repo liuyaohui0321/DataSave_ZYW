@@ -110,6 +110,7 @@ public slots:
     void onExportFinished();
     void onStopExport();
     void PlayBackWaitfinished();
+    void slot_exportFinished1();
 
 private slots:
     void slot_onItemSelected();     //点击任意节点获取信息
@@ -132,6 +133,7 @@ private slots:
     void slotPlayBack(); //回放   --
     void slotExport(); //导出
     void stopExport(); //停止导出
+    void stop10GExport(); //停止万兆导出
     void slotAcquisition(); //采集    --
 
     void showMenu();
@@ -194,6 +196,7 @@ private:
     QStandardItemModel *Model;
     QProgressDialog* progressDialog = nullptr; // 导出进度对话框
     playbackDialog *playbackdialog = nullptr;
+    QDialog* m_exportProgressDialog = nullptr; // 万兆导出指令发送后弹窗对话框
 };
 
 class IPDialog : public QDialog
