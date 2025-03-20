@@ -21,6 +21,14 @@ TCPThread::TCPThread(QObject *parent)
         tcp_exportFileInfo.isReceivingFileInfo = false;
         m_timer->stop();
     });
+
+    m_timer1 = new QTimer(this);
+    connect(m_timer1,&QTimer::timeout,this,[=](){
+        tcp_exportFileInfo.isReceivingFileInfo = false;
+        emit sign_exportFinished1();
+        m_timer1->stop();
+        qDebug()<<"m_timer1->stop()";
+    });
 }
 
 void TCPThread::slot_getCmd(const QByteArray &cmd)
@@ -139,6 +147,7 @@ void TCPThread::onReadyRead()
 //    else if(tcp_exportFileInfo.isReceivingFileInfo==true  && checkIfMvpp==false)
     else if(tcp_exportFileInfo.isReceivingFileInfo==true)
     {
+        m_timer1->start(3000);
         //qDebug()<<"收到了要导出的数据,正常模式导出";
         processFileData(data);  //接收要导出的数据
     }
@@ -224,11 +233,11 @@ void TCPThread::processCompletePacket(QByteArray &data)
 //        qDebug() << "获取回放结束的应答包."<<data.toHex();
         emit stopplayback();
     }
-    if(head == HEAD && end == END && oper_type == 0xC5 && oper_ID == 0x11)
-    {
-        qDebug() << "收到导出完成应答包";
-        emit sign_exportFinished1();
-    }
+//    if(head == HEAD && end == END && oper_type == 0xC5 && oper_ID == 0x11)
+//    {
+//        qDebug() << "收到导出完成应答包";
+//        emit sign_exportFinished1();
+//    }
 }
 
 

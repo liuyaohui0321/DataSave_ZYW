@@ -104,6 +104,7 @@ private:
     ExportFileInfo tcp_exportFileInfo;//导出文件信息
 
     QTimer *m_timer;
+    QTimer *m_timer1;
 };
 
 #endif // TCPTHREAD_H
