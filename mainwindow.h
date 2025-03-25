@@ -14,7 +14,8 @@
 
 #include "src/contextmenu.h"
 #include "src/helper/protocol_disk.h"
-#include "src/mymenu.h"
+//#include "src/mymenu.h"
+#include <QPainter>
 #include "src/net/tcpthread.h"
 #include "src/dialog/diskconfirm.h"
 //#include "src/dialog/dlgexportdata.h"
