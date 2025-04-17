@@ -17,10 +17,10 @@ void ContextMenu::createActions()
 {
     addLargeAction(tr("刷新"), ":/my/images/refurbish_primary_blue.png", SIGNAL(sigRefresh()),ButtonType::Refresh);
     this->addSeparator();
-    addLargeAction(tr("打开"), ":/my/images/folder_open_primary_blue.png", SIGNAL(signalOpen()),ButtonType::Open);
-    addLargeAction(tr("关闭"), ":/my/images/close_rectangle_primary_blue.png", SIGNAL(signalClose()),ButtonType::Close);
+//    addLargeAction(tr("打开"), ":/my/images/folder_open_primary_blue.png", SIGNAL(signalOpen()),ButtonType::Open);
+//    addLargeAction(tr("关闭"), ":/my/images/close_rectangle_primary_blue.png", SIGNAL(signalClose()),ButtonType::Close);
 
-    this->addSeparator();
+//    this->addSeparator();
     addLargeAction("新建文件夹", ":/my/images/folder_add_primary_blue.png", SIGNAL(signalNewFolder()),ButtonType::AddFolder);
     addLargeAction(tr("新建文件"), ":/my/images/file_add_primary_blue.png", SIGNAL(signalNewFile()),ButtonType::AddFile);
     addLargeAction(tr("删除"), ":/my/images/delete_fill_primary_blue.png", SIGNAL(signalDelete()),ButtonType::Delete);
