@@ -147,7 +147,7 @@ void TCPThread::onReadyRead()
 //    else if(tcp_exportFileInfo.isReceivingFileInfo==true  && checkIfMvpp==false)
     else if(tcp_exportFileInfo.isReceivingFileInfo==true)
     {
-        m_timer1->start(3000);
+        m_timer1->start(5000);
         //qDebug()<<"收到了要导出的数据,正常模式导出";
         processFileData(data);  //接收要导出的数据
     }

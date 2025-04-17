@@ -2790,17 +2790,17 @@ void MainWindow::slot_newrecvCommonRespon(const quint32 &type,const quint32 &id,
             ui->textBrowser_log->append(log3);
         }
     }
-    if((type==0xD2) && (id == 0x07) && (result==0x11))
-    {
-        qDebug()<<"收到了导出完成的回复";
-        if(lastOrderType==TYPE::EXPORT)
-        {
-            qDebug()<<"上一次的操作是导出";
-            lastOrderType = TYPE::UNUSE;
-            QString log = QString("%1:文件导出成功.").arg(getNowTime());
-            ui->textBrowser_log->append(log);
-        }
-    }
+//    if((type==0xD2) && (id == 0x07) && (result==0x11))
+//    {
+//        qDebug()<<"收到了导出完成的回复";
+//        if(lastOrderType==TYPE::EXPORT)
+//        {
+//            qDebug()<<"上一次的操作是导出";
+//            lastOrderType = TYPE::UNUSE;
+//            QString log = QString("%1:文件导出成功.").arg(getNowTime());
+//            ui->textBrowser_log->append(log);
+//        }
+//    }
 }
 
 //void MainWindow::onExportProgress(int percent)
