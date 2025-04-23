@@ -971,7 +971,7 @@ void MainWindow::MultiFilePlayBack()
     qDebug() << "多文件操作";
 //    auto mode = dlg3->getReadMode();
 //    auto cnt = dlg3->getLoopCnt();
-    auto gth = dlg3->getPlaybackChannel();
+//    auto gth = dlg3->getPlaybackChannel();
     connect(dlg3, &dlg_multifile_play_back::accepted, this, [=]()mutable
     {
         // 获取选中项
@@ -991,6 +991,7 @@ void MainWindow::MultiFilePlayBack()
         }
         // 使用selectedTexts进行后续操作
         // qDebug() << "选中的项：" << selectedTexts;
+        auto gth = dlg3->getPlaybackChannel();
          qDebug() << "num：" << num;
          PlayBackWaitfinished();
         cmd_MorefilePlayBack_info.order_head = ORDERHEAD;
@@ -1033,8 +1034,14 @@ void MainWindow::MultiFilePlayBack()
 //                cmd_MorefilePlayBack_info.read_func = 16;
 //                break;
             case BackGTH::GTH_4X:
+                qDebug()<<"GTH_4X";
                 strLog ="单次读取GTH_4X";
                 cmd_MorefilePlayBack_info.read_func = 32;
+                break;
+            case BackGTH::GTH_UDP:
+                qDebug()<<"GTH_UDP";
+                strLog ="单次万兆光口读取";
+                cmd_MorefilePlayBack_info.read_func = 0;
                 break;
         }
         // 1. 计算需要发送的总大小
@@ -1466,6 +1473,10 @@ QString strLog;
                 strLog ="单次读取GTH_4X";
                 cmd_read_file_func_info.read_func = 32;
                 break;
+            case BackGTH::GTH_UDP:
+                strLog ="单次万兆光口读取";
+                cmd_read_file_func_info.read_func = 0;
+                break;
         }
     }
     else if(ReadMode::LoopRead == mode) {
@@ -1481,6 +1492,10 @@ QString strLog;
                 case BackGTH::GTH_4X:
                     strLog = QString(" 模式为：循环回放GTH_4X，次数为:%1").arg(count);
                     cmd_read_file_func_info.read_func = 288;
+                    break;
+                case BackGTH::GTH_UDP:
+                    strLog ="单次万兆光口读取";
+                    cmd_read_file_func_info.read_func = 256;
                     break;
             }
         }

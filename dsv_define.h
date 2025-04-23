@@ -46,7 +46,8 @@ enum class NetworkPortType {
 enum BackGTH {
 //    GTH_NETWORK,      // 网口
 //    GTH_1X,      // 回放通道1x
-    GTH_4X       // 回放通道8x
+    GTH_4X,       // 回放通道8x
+    GTH_UDP
 };
 
 //对话框类型

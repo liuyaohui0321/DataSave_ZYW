@@ -62,6 +62,8 @@ void DlgPlayBackData::initUI()
 //    ui->m_comGth->addItem(QString("GTH_8x"), static_cast<int>(BackGTH::GTH_8X));
 //    ui->m_comGth->addItem(QString("NetWork"), static_cast<int>(BackGTH::GTH_NETWORK));
     ui->m_comGth->addItem(QString("GTH_4x"), static_cast<int>(BackGTH::GTH_4X));
+    ui->m_comGth->addItem(QString("万兆光口"), static_cast<int>(BackGTH::GTH_UDP));
+
 }
 
 void DlgPlayBackData::initConnect()
