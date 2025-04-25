@@ -252,7 +252,8 @@ QStandardItemModel*  DirectoryParser::createModelFromFileOrFolderInfo(const File
     QStandardItemModel* model = new QStandardItemModel();
 
     // 设置模型的标题行
-    model->setHorizontalHeaderLabels({"名称", "类型", "文件大小", "修改时间"});
+//    model->setHorizontalHeaderLabels({"名称", "类型", "文件大小", "修改时间"});
+    model->setHorizontalHeaderLabels({"名称", "类型", "文件大小", "  "});
 
     // 创建根项
     QStandardItem* rootItem = model->invisibleRootItem();

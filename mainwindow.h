@@ -139,7 +139,8 @@ private slots:
     //磁盘管理相关
     void slot_diskFormat();     //磁盘格式化
     void slot_diskAgainMount(); //磁盘重新挂载
-    void slot_diskUnmount();    //磁盘解挂载
+//    void slot_diskUnmount();    //磁盘解挂载
+    void slot_diskUnmount();    //磁盘切换为直接存储模式，函数名不改
     void slot_stateBarRefresh(); //磁盘刷新状态
     void updateStatusLabel(const QColor &color);
     void setFiberStatus(FiberStatus status);

@@ -35,17 +35,18 @@ void MainWindow::menubarInit()
     //磁盘管理
     auto disk_manager =  ui->menubar->addMenu("磁盘管理");
     auto *diskOneAction = new QAction(QIcon(":/my/images/disk.png"), tr("磁盘格式化"), this);
-    auto *diskTwoAction = new QAction(QIcon(":/my/images/disk.png"), tr("磁盘重新挂载"), this);
-    auto *diskThreeAction = new QAction(QIcon(":/my/images/disk.png"), tr("磁盘解挂载"), this);
-    auto *diskFourAction = new QAction(QIcon(":/my/images/disk.png"), tr("磁盘IP地址设置"), this);
+//    auto *diskTwoAction = new QAction(QIcon(":/my/images/disk.png"), tr("磁盘重新挂载"), this);
+//    auto *diskThreeAction = new QAction(QIcon(":/my/images/disk.png"), tr("磁盘解挂载"), this);
+    auto *diskThreeAction = new QAction(QIcon(":/my/images/disk.png"), tr("磁盘切换为直接存储模式"), this);
+//    auto *diskFourAction = new QAction(QIcon(":/my/images/disk.png"), tr("磁盘IP地址设置"), this);
 
     disk_manager->addAction(diskOneAction);
     disk_manager->addSeparator();       //添加分割线
-    disk_manager->addAction(diskTwoAction);
-    disk_manager->addSeparator();       //添加分割线
+//    disk_manager->addAction(diskTwoAction);
+//    disk_manager->addSeparator();       //添加分割线
     disk_manager->addAction(diskThreeAction);
     disk_manager->addSeparator();       //添加分割线
-    disk_manager->addAction(diskFourAction);
+//    disk_manager->addAction(diskFourAction);
 
     auto connect_manager = ui->menubar->addMenu("连接配置");
 //    auto *tcpAction = new QAction("千兆网连接配置",this);
@@ -56,9 +57,9 @@ void MainWindow::menubarInit()
     connect(udpAction,&QAction::triggered,this,&MainWindow::slot_udpInfo);
 
     connect(diskOneAction, &QAction::triggered, this, &MainWindow::slot_diskFormat);
-    connect(diskTwoAction, &QAction::triggered, this, &MainWindow::slot_diskAgainMount);
+//    connect(diskTwoAction, &QAction::triggered, this, &MainWindow::slot_diskAgainMount);
     connect(diskThreeAction, &QAction::triggered, this, &MainWindow::slot_diskUnmount);
-    connect(diskFourAction, &QAction::triggered, this, &MainWindow::showIPDialog);
+//    connect(diskFourAction, &QAction::triggered, this, &MainWindow::showIPDialog);
 
     // 创建一个包含 QLabel 的 QWidget
     QWidget *rightWidget = new QWidget(this);
@@ -2395,11 +2396,34 @@ void MainWindow::slot_diskAgainMount()
 
 void MainWindow::slot_diskUnmount()
 {
-    QMessageBox::StandardButton rb = QMessageBox::information(NULL, "确认是否进行操作", "是否进行磁盘解挂载？",
+//    QMessageBox::StandardButton rb = QMessageBox::information(NULL, "确认是否进行操作", "是否进行磁盘解挂载？",
+//                                                              QMessageBox::Yes | QMessageBox::No, QMessageBox::Yes);
+//    if (rb == QMessageBox::Yes) {
+//        //qDebug() << "磁盘解挂载.";
+//        QString log = QString("%1: 磁盘解挂载操作").arg(getNowTime());
+//        ui->textBrowser_log->append(log);
+
+//        Cmd_Disk_Info cmd_disk_info;
+//        cmd_disk_info.order_head = ORDERHEAD;
+//        cmd_disk_info.head = DSV_PACKET_HEADER;
+//        cmd_disk_info.source_ID = 0;
+//        cmd_disk_info.dest_ID = 0;
+//        cmd_disk_info.oper_type = 0xB2;
+//        cmd_disk_info.oper_ID = 0x01;
+//        cmd_disk_info.package_num = 0;
+//        cmd_disk_info.fun_type = 0x03;
+//        cmd_disk_info.check = 0;
+//        cmd_disk_info.end = DSV_PACKET_TAIL;
+//        QByteArray sendData = QByteArray((char *) (&cmd_disk_info), sizeof(Cmd_Disk_Info));
+//        lastOrderType = TYPE::DISK_UNMOUNT;
+//        emit sign_sendCmd(sendData);
+//    }
+
+    QMessageBox::StandardButton rb = QMessageBox::information(NULL, "确认是否进行操作", "是否切换为磁盘直接存储模式？",
                                                               QMessageBox::Yes | QMessageBox::No, QMessageBox::Yes);
     if (rb == QMessageBox::Yes) {
         //qDebug() << "磁盘解挂载.";
-        QString log = QString("%1: 磁盘解挂载操作").arg(getNowTime());
+        QString log = QString("%1: 磁盘切换回直接存储模式").arg(getNowTime());
         ui->textBrowser_log->append(log);
 
         Cmd_Disk_Info cmd_disk_info;
