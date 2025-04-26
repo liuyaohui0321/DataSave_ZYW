@@ -1859,7 +1859,7 @@ void MainWindow::stopExport()
 //}
 
 //下发导出命令
-void MainWindow::exportFile(const NetworkPortType &type,uint32_t percent,uint32_t cap)
+void MainWindow::exportFile(const NetworkPortType &type,uint32_t percent,uint32_t cap,uint32_t OFFSET)
 {
     //qDebug() << "开始下发导出指令";
     //下发内容,我只需要选择文件，读取就可以了，其他不用管
@@ -1888,7 +1888,8 @@ void MainWindow::exportFile(const NetworkPortType &type,uint32_t percent,uint32_
         cmd_export_file_func_info.export_type = 0x01;
     }
 
-    cmd_export_file_func_info.export_percent = percent;
+    cmd_export_file_func_info.export_Offset = OFFSET;//导出偏移 2025.4.25加
+    cmd_export_file_func_info.export_percent = percent;  
     cmd_export_file_func_info.export_cap = cap;
     cmd_export_file_func_info.check = 0;
     cmd_export_file_func_info.end = DSV_PACKET_TAIL;
@@ -1933,6 +1934,7 @@ void MainWindow::PercentExport()
         else
         {
             auto type = dlg5->getExportType();  //获取是千兆还是万兆网
+            auto offset1 = dlg5->getOffset();    //获取偏移
             auto percent = dlg5->getExportPercent();
             auto cap = dlg5->getExportCap();
             if((percent>100)||(percent<=0))   percent=100;
@@ -1944,7 +1946,7 @@ void MainWindow::PercentExport()
 //                qDebug()<<"cap:"<<cap;
                  export_cap=static_cast<quint64>(cap*percent/100*0x100000);
             }
-            exportFile(static_cast<NetworkPortType>(type),percent,cap);
+            exportFile(static_cast<NetworkPortType>(type),percent,cap,offset1);
             // 新增进度对话框
             if(!m_exportProgressDialog)
             {

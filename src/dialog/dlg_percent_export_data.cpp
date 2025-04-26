@@ -38,12 +38,18 @@ int dlg_percent_export_data::getExportCap()
     return ui->Rongliangline->text().toUInt();
 }
 
+int dlg_percent_export_data::getOffset()
+{
+    return ui->PianYiline->text().toUInt();
+}
+
 void dlg_percent_export_data::initUI()
 {
     ui->m_leName_2->setText(m_pDsvPath);
 //    ui->m_leName_2->setReadOnly(true);
     QStringList strListType;
-    strListType<<"千兆网口"<<"万兆网口";
+//    strListType<<"千兆网口"<<"万兆网口";
+    strListType<<"千兆网口";
     ui->m_cboxExportType_2->addItems(strListType);
 }
 

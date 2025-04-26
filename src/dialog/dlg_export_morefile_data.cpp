@@ -33,7 +33,8 @@ void dlg_export_moreFile_data::initUI()
     ui->m_leName_3->setText(m_pDsvPath);
 //    ui->m_leName_2->setReadOnly(true);
     QStringList strListType;
-    strListType<<"千兆网口"<<"万兆网口";
+//    strListType<<"千兆网口"<<"万兆网口";
+    strListType<<"千兆网口";
     ui->m_cboxExportType->addItems(strListType);
 }
 

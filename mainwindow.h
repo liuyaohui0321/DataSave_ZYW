@@ -74,7 +74,7 @@ public:
     //void stopWriteFile();  //点击停止写入
     void playBack(ReadMode mode,BackGTH gth,const int &count);    //回放
     void stopPlayBack();    //停止回放
-    void exportFile(const NetworkPortType &type,uint32_t percent=100,uint32_t cap=0);
+    void exportFile(const NetworkPortType &type,uint32_t percent=100,uint32_t cap=0,uint32_t OFFSET=0);
     void PercentExport();           //百分比导出指令
     void MoreFileExport();          //批量导出指令
     void exportMoreFile(const NetworkPortType &type,QStringList *strlist,int Num);   //发送批量导出指令

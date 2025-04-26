@@ -62,30 +62,36 @@
        </layout>
       </item>
       <item row="2" column="0">
+       <widget class="QLabel" name="PianYiLabel">
+        <property name="text">
+         <string>偏移大小：(MB)</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1">
+       <widget class="QLineEdit" name="PianYiline"/>
+      </item>
+      <item row="3" column="0">
        <widget class="QLabel" name="label">
         <property name="text">
          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;百分比：(&lt;span style=&quot; font-size:10pt;&quot;&gt;%&lt;/span&gt;)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
         </property>
        </widget>
       </item>
-      <item row="2" column="1" rowspan="2">
-       <layout class="QVBoxLayout" name="verticalLayout">
-        <item>
-         <widget class="QLineEdit" name="PercentLine"/>
-        </item>
-        <item>
-         <widget class="QLineEdit" name="Rongliangline"/>
-        </item>
-       </layout>
+      <item row="3" column="1">
+       <widget class="QLineEdit" name="PercentLine"/>
       </item>
-      <item row="3" column="0">
+      <item row="4" column="0">
        <widget class="QLabel" name="label_2">
         <property name="text">
          <string>导出容量：(MB)</string>
         </property>
        </widget>
       </item>
-      <item row="4" column="0" colspan="2">
+      <item row="4" column="1">
+       <widget class="QLineEdit" name="Rongliangline"/>
+      </item>
+      <item row="5" column="0" colspan="2">
        <layout class="QHBoxLayout" name="horizontalLayout_6">
         <item>
          <widget class="QComboBox" name="m_cboxExportType_2"/>

@@ -23,6 +23,7 @@ public:
     int getExportType();
     int getExportPercent();
     int getExportCap();
+    int getOffset();
 private:
     void initUI();
     void initConnect();

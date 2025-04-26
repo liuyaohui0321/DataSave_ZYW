@@ -429,6 +429,7 @@ typedef struct
 
     char16_t file_address[1024];    //文件路径
     uint32_t export_type;             //导出方式
+    uint32_t export_Offset;           //导出偏移 2025.4.25加
     uint32_t export_percent;          //导出百分比
     uint32_t export_cap;             //导出容量
 
