@@ -346,7 +346,9 @@ void MainWindow::init()
 
 //    connect(this,&MainWindow::sign_addTcpFileHead,m_tcp,&TCPThread::slot_addTcpHead);
     connect(m_tcp,&TCPThread::sign_speed,this,&MainWindow::slot_showSpeed);
-connect(m_tcp, &TCPThread::sign_exportFinished1, this, &MainWindow::slot_exportFinished1);
+    connect(m_tcp, &TCPThread::sign_exportFinished1, this, &MainWindow::slot_exportFinished1);
+    connect(m_tcp, &TCPThread::sign_readytowrite, this, &MainWindow::slot_closeReadyToWriteDialog);
+    connect(m_tcp, &TCPThread::sign_readytowrite, this, &MainWindow::slot_closeMakeFsDialog);
     m_udpInfoWidget = new udpWidget(this);
     m_udpInfoWidget->hide();
 
@@ -382,6 +384,13 @@ connect(m_tcp, &TCPThread::sign_exportFinished1, this, &MainWindow::slot_exportF
         QString log = QString("万兆网导出数据完成").arg(getNowTime());
         ui->textBrowser_log->append(log);
     });
+
+//    Timer = new QTimer(this);
+//    connect(Timer,&QTimer::timeout,this,[=]()
+//    {
+//        Timer->stop();
+//        qDebug()<<"m_timer1->stop()";
+//    });
 }
 
 void MainWindow::slotRefresh()
@@ -2367,7 +2376,37 @@ void MainWindow::slot_diskFormat()
         QByteArray sendData = QByteArray((char *) (&cmd_disk_info), sizeof(Cmd_Disk_Info));
         lastOrderType = TYPE::DISK_FORMAT;
         emit sign_sendCmd(sendData);
+        if(!MakeFsDialog)
+        {
+            MakeFsDialog = new QDialog(this);
+            MakeFsDialog->setWindowTitle(tr("格式化"));
+            MakeFsDialog->setModal(true);
+            MakeFsDialog->setFixedSize(300, 180); // 设置更大的固定尺寸
+            // 设置窗口标志禁用关闭按钮
+            MakeFsDialog->setWindowFlags(MakeFsDialog->windowFlags() &
+                                                 ~Qt::WindowCloseButtonHint |
+                                                 Qt::WindowTitleHint);
+            QVBoxLayout* layout = new QVBoxLayout(MakeFsDialog);
+            QLabel* label = new QLabel(tr("正在进行格式化"), MakeFsDialog);
+            label->setAlignment(Qt::AlignCenter); // 文字水平垂直居中
+            QFont font = label->font();
+            font.setPointSize(9); // 增大字体
+            label->setFont(font);
 
+            QPushButton* stopBtn1 = new QPushButton(tr("关闭"), MakeFsDialog);
+            stopBtn1->setFixedSize(80, 30); // 设置按钮大小
+
+            // 添加布局元素
+            layout->addStretch(1);
+            layout->addWidget(label, 0, Qt::AlignCenter);
+            layout->addSpacing(30);
+            layout->addWidget(stopBtn1, 0, Qt::AlignCenter);
+            layout->addStretch(1);
+
+            connect(stopBtn1, &QPushButton::clicked, this, &MainWindow::slot_closeMakeFsDialog);
+//            connect(this, &MainWindow::destroyed, ReadyToWriteDialog, &QDialog::deleteLater);
+        }
+        MakeFsDialog->show();
     }
 }
 void MainWindow::slot_diskAgainMount()
@@ -2434,7 +2473,8 @@ void MainWindow::slot_diskUnmount()
         cmd_disk_info.source_ID = 0;
         cmd_disk_info.dest_ID = 0;
         cmd_disk_info.oper_type = 0xB2;
-        cmd_disk_info.oper_ID = 0x01;
+//        cmd_disk_info.oper_ID = 0x01;
+        cmd_disk_info.oper_ID = 0x02; //4.30号 add by lyh
         cmd_disk_info.package_num = 0;
         cmd_disk_info.fun_type = 0x03;
         cmd_disk_info.check = 0;
@@ -2442,6 +2482,57 @@ void MainWindow::slot_diskUnmount()
         QByteArray sendData = QByteArray((char *) (&cmd_disk_info), sizeof(Cmd_Disk_Info));
         lastOrderType = TYPE::DISK_UNMOUNT;
         emit sign_sendCmd(sendData);
+        if(!ReadyToWriteDialog)
+        {
+            ReadyToWriteDialog = new QDialog(this);
+            ReadyToWriteDialog->setWindowTitle(tr("进入直接存储模式"));
+            ReadyToWriteDialog->setModal(true);
+            ReadyToWriteDialog->setFixedSize(300, 180); // 设置更大的固定尺寸
+            // 设置窗口标志禁用关闭按钮
+            ReadyToWriteDialog->setWindowFlags(ReadyToWriteDialog->windowFlags() &
+                                                 ~Qt::WindowCloseButtonHint |
+                                                 Qt::WindowTitleHint);
+            QVBoxLayout* layout = new QVBoxLayout(ReadyToWriteDialog);
+            QLabel* label = new QLabel(tr("正在进入直接存储模式"), ReadyToWriteDialog);
+            label->setAlignment(Qt::AlignCenter); // 文字水平垂直居中
+            QFont font = label->font();
+            font.setPointSize(9); // 增大字体
+            label->setFont(font);
+
+            QPushButton* stopBtn = new QPushButton(tr("关闭"), ReadyToWriteDialog);
+            stopBtn->setFixedSize(80, 30); // 设置按钮大小
+
+            // 添加布局元素
+            layout->addStretch(1);
+            layout->addWidget(label, 0, Qt::AlignCenter);
+            layout->addSpacing(30);
+            layout->addWidget(stopBtn, 0, Qt::AlignCenter);
+            layout->addStretch(1);
+
+            connect(stopBtn, &QPushButton::clicked, this, &MainWindow::slot_closeReadyToWriteDialog);
+//            connect(this, &MainWindow::destroyed, ReadyToWriteDialog, &QDialog::deleteLater);
+        }
+        ReadyToWriteDialog->show();
+    }
+}
+
+void MainWindow::slot_closeReadyToWriteDialog()
+{
+    if(ReadyToWriteDialog)
+    {
+        ReadyToWriteDialog->close();
+        delete ReadyToWriteDialog;
+        ReadyToWriteDialog = nullptr;
+    }
+}
+
+void MainWindow::slot_closeMakeFsDialog()
+{
+    if(MakeFsDialog)
+    {
+        MakeFsDialog->close();
+        delete MakeFsDialog;
+        MakeFsDialog = nullptr;
     }
 }
 

@@ -139,23 +139,18 @@ void TCPThread::onReadyRead()
             processCompletePacket(m_dataBuffer);
             // 清空缓冲区
             m_dataBuffer.clear();
+            tcp_exportFileInfo.isReceivingFileInfo = false;//2025.4.29 by lyh
         }
         else {
             //qDebug() << "没有找到完整的数据包，退出当前检查";
         }
     }
-//    else if(tcp_exportFileInfo.isReceivingFileInfo==true  && checkIfMvpp==false)
     else if(tcp_exportFileInfo.isReceivingFileInfo==true)
     {
         m_timer1->start(5000);
         //qDebug()<<"收到了要导出的数据,正常模式导出";
         processFileData(data);  //接收要导出的数据
     }
-//    else if(tcp_exportFileInfo.isReceivingFileInfo==true  && checkIfMvpp==true)
-//    {
-//        //qDebug()<<"收到了要导出的数据，使用mvpp模式导出";
-//        processFileDataMVPP(data);  //接收要导出的数据
-//    }
     else
     {
         //qDebug()<<"TCP收到的数据判断错误";
@@ -232,6 +227,10 @@ void TCPThread::processCompletePacket(QByteArray &data)
     {
 //        qDebug() << "获取回放结束的应答包."<<data.toHex();
         emit stopplayback();
+    }
+    if(head == HEAD && end == END && oper_type == 0x5A && oper_ID == 0xC5)
+    {
+       emit sign_readytowrite();
     }
 //    if(head == HEAD && end == END && oper_type == 0xC5 && oper_ID == 0x11)
 //    {

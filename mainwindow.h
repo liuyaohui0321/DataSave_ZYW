@@ -141,6 +141,8 @@ private slots:
     void slot_diskAgainMount(); //磁盘重新挂载
 //    void slot_diskUnmount();    //磁盘解挂载
     void slot_diskUnmount();    //磁盘切换为直接存储模式，函数名不改
+    void slot_closeReadyToWriteDialog();
+    void slot_closeMakeFsDialog();
     void slot_stateBarRefresh(); //磁盘刷新状态
     void updateStatusLabel(const QColor &color);
     void setFiberStatus(FiberStatus status);
@@ -177,7 +179,7 @@ private:
     ContextMenu *m_pContextMenu{nullptr};  //右键菜单
     TreeItemInfo m_TreeItemInfo; //选中项信息
     ExportFileInfo m_ExportFileInfo;//导出文件信息
-
+//    QTimer *Timer;
 
     enum TYPE{
         UNUSE,REFRESH,ADDFOLDER,ADDFILE,DELETE,RENAME,MOVE,COPY,EXPORT,STOP_EXPORT,DISK_FORMAT,DISK_AGAINMOUNT,DISK_UNMOUNT,STOPAcquisition,Acquisition,PLAYBACK,stopPLAYBACK
@@ -196,6 +198,8 @@ private:
 //    QProgressDialog* progressDialog = nullptr; // 导出进度对话框
     playbackDialog *playbackdialog = nullptr;
     QDialog* m_exportProgressDialog = nullptr;// 导出指令发送后弹窗对话框
+    QDialog* ReadyToWriteDialog = nullptr;// 执行切换为直接存储模式会弹窗的对话框
+    QDialog* MakeFsDialog = nullptr;// 执行格式化会弹窗的对话框
 };
 
 class IPDialog : public QDialog
