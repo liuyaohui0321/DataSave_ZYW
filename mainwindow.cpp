@@ -2906,20 +2906,20 @@ void MainWindow::slot_newrecvCommonRespon(const quint32 &type,const quint32 &id,
         if(lastOrderType==TYPE::DISK_FORMAT)
         {
             lastOrderType = TYPE::UNUSE;
-            QString log = QString("%1:磁盘挂载成功.").arg(getNowTime());
-            ui->textBrowser_log->append(log);
+//            QString log = QString("%1:磁盘挂载成功.").arg(getNowTime());
+//            ui->textBrowser_log->append(log);
         }
         if(lastOrderType==TYPE::DISK_FORMAT)
         {
             lastOrderType = TYPE::UNUSE;
-            QString log2 = QString("%1:磁盘重新挂载成功.").arg(getNowTime());
-            ui->textBrowser_log->append(log2);
+//            QString log2 = QString("%1:磁盘重新挂载成功.").arg(getNowTime());
+//            ui->textBrowser_log->append(log2);
         }
         if(lastOrderType==TYPE::DISK_FORMAT)
         {
             lastOrderType = TYPE::UNUSE;
-            QString log3 = QString("%1:磁盘解挂载成功.").arg(getNowTime());
-            ui->textBrowser_log->append(log3);
+//            QString log3 = QString("%1:磁盘解挂载成功.").arg(getNowTime());
+//            ui->textBrowser_log->append(log3);
         }
     }
 //    if((type==0xD2) && (id == 0x07) && (result==0x11))

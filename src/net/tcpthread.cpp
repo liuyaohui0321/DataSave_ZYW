@@ -213,6 +213,12 @@ void TCPThread::processCompletePacket(QByteArray &data)
 
         // 创建模型并将 FileOrFolderInfo 转换为模型数据
         QStandardItemModel *model = parser.createModelFromFileOrFolderInfo(rootInfo);
+        // 隐藏根目录行的第三列数据
+        if(model->rowCount() > 0)
+        {
+            QModelIndex rootIndex = model->index(0, 2); // 第三列索引为2
+            model->setData(rootIndex, QVariant(), Qt::DisplayRole);
+        }
         emit sign_sendDirectoryParser(model);
     }
     if(head == HEAD && end == END && oper_type == 0xA5 && oper_ID == 0x11)
