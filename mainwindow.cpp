@@ -2842,14 +2842,14 @@ void MainWindow::slot_StandardItemModel(QStandardItemModel *data)
 
 void MainWindow::slot_newrecvCommonRespon(const quint32 &type,const quint32 &id,const quint32 &result)
 {
-    qDebug()<<"----------收到了通用应答，判断是什么操作";
-    qDebug()<<"上一步执行的操作类型 ："<<lastOrderType;
+//    qDebug()<<"----------收到了通用应答，判断是什么操作";
+//    qDebug()<<"上一步执行的操作类型 ："<<lastOrderType;
 
-    qDebug()<<"main 收到的通用应答包操作类型："<<hex << type;
-    qDebug()<<"main 收到的通用应答包操作ID："<<hex << id;
-    qDebug()<<"main 收到的通用应答包jieguo："<<hex << result;
+//    qDebug()<<"main 收到的通用应答包操作类型："<<hex << type;
+//    qDebug()<<"main 收到的通用应答包操作ID："<<hex << id;
+//    qDebug()<<"main 收到的通用应答包jieguo："<<hex << result;
 
-    if((type == 0xA2) && (id == 0x01) && (result==0x11))  //成功
+    if((type == 0xA2) && (id == 0x01) && (result==0x11))  //成功 待修改
     {
         qDebug()<<"####################";
         if(lastOrderType==TYPE::ADDFOLDER)
